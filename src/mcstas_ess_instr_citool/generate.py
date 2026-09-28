@@ -5,10 +5,18 @@ import sys
 import traceback
 import os
 
-def generate( info, outdir ):
+# Max time (seconds) allowed for generating a single .instr file from a
+# McStasScript python file:
+DEFAULT_PYGEN_TIMEOUT = 600
+
+def generate( info, outdir, pygen_timeout = DEFAULT_PYGEN_TIMEOUT ):
     assert outdir.is_dir()
     instrdir = outdir.joinpath('instr')
-    genfct = _genpy if info['layout']=='instrpy' else _gen
+    if info['layout']=='instrpy':
+        def genfct( name, srcpath, outdir ):
+            return _genpy( name, srcpath, outdir, timeout = pygen_timeout )
+    else:
+        genfct = _gen
     setups = info['setups']
     if not setups:
         raise RuntimeError('No instruments found!')
@@ -83,7 +91,7 @@ def _worker(conn, name, srcpath, outdir):
         conn.close()
 
 
-def _genpy( name, srcpath, outdir, timeout = None):
+def _genpy( name, srcpath, outdir, timeout = DEFAULT_PYGEN_TIMEOUT ):
     ctx = mp.get_context("spawn")
     parent, child = ctx.Pipe(duplex=False)
     process = ctx.Process(
@@ -96,7 +104,8 @@ def _genpy( name, srcpath, outdir, timeout = None):
         if not parent.poll(timeout):
             process.terminate()
             process.join()
-            raise TimeoutError(f"Process timed out for instrument: {srcpath}")
+            raise TimeoutError(f"Process timed out after {timeout} seconds"
+                               f" for instrument: {srcpath}")
         try:
             status, message = parent.recv()
         except EOFError:
