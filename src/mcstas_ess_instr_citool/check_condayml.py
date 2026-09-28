@@ -52,6 +52,11 @@ _PACKAGE_NAME_RE = re.compile(
     r"^[A-Za-z0-9][A-Za-z0-9_.-]*$"
 )
 
+# Conda also supports a bare version after the package name, like
+# "numpy 1.26.*" or "numpy 1.26". These are treated as pinning constraints
+# (represented with an empty operator).
+_CONDA_BARE_VERSION_RE = re.compile(r"^[0-9][0-9A-Za-z.*+!_]*$")
+
 _OPERATORS = (
     "==",
     ">=",
@@ -62,6 +67,11 @@ _OPERATORS = (
     "<",
     "=",
 )
+
+
+def _normalise_pip_name(name: str) -> str:
+    # PEP 503 name normalisation:
+    return re.sub(r"[-_.]+", "-", name).lower()
 
 
 def _runtime_error(path: Path, message: str) -> RuntimeError:
@@ -330,7 +340,8 @@ def _parse_conda_yaml(path: Path) -> dict[str, Any]:
                 dependencies.append({"pip": pip_dependencies})
                 current_section = "pip"
 
-            elif ":" in item:
+            elif re.search(r":(\s|$)", item):
+                # A mapping, but not a "channel::package" spec.
                 raise _runtime_error(
                     path,
                     f"line {line_number}: unsupported dependency mapping "
@@ -423,6 +434,8 @@ def _split_package_spec(
         )
 
     package_name = match.group(1).lower()
+    if kind == "pip":
+        package_name = _normalise_pip_name(package_name)
     constraint_text = (match.group(2) or "").strip()
 
     if not _PACKAGE_NAME_RE.fullmatch(package_name):
@@ -449,12 +462,25 @@ def _split_package_spec(
             None,
         )
 
+        if (
+            operator is None
+            and kind == "conda"
+            and _CONDA_BARE_VERSION_RE.fullmatch(clause)
+        ):
+            constraints.append(("", clause))
+            continue
+
         if operator is None:
             raise _runtime_error(
                 path,
                 f"unsupported version constraint {clause!r} in "
                 f"{kind} dependency {raw_spec!r}. Supported operators "
-                f"are: {', '.join(_OPERATORS)}.",
+                f"are: {', '.join(_OPERATORS)}"
+                + (
+                    " (or a bare conda version like '1.26.*')."
+                    if kind == "conda"
+                    else "."
+                ),
             )
 
         version = clause[len(operator):].strip()
@@ -751,7 +777,9 @@ def validate_conda_requirements(
                 "package from the 'pip:' section.",
             )
 
-        if package_name not in pip_requirements_allowed:
+        if package_name not in {
+            _normalise_pip_name(name) for name in pip_requirements_allowed
+        }:
             allowed = ", ".join(
                 repr(name)
                 for name in sorted(pip_requirements_allowed)
@@ -766,7 +794,9 @@ def validate_conda_requirements(
                 "intentionally permitted.",
             )
 
-        if package_name in conda_names:
+        if package_name in {
+            _normalise_pip_name(name) for name in conda_names
+        }:
             raise _runtime_error(
                 path,
                 f"dependency-source conflict for package "
@@ -788,7 +818,9 @@ def validate_conda_requirements(
         _validate_version_policy(
             package_name=package_name,
             constraints=constraints,
-            allowed_pinnings=pip_pinning_allowed,
+            allowed_pinnings={
+                _normalise_pip_name(name) for name in pip_pinning_allowed
+            },
             path=path,
             kind="pip",
             raw_spec=raw_spec,
@@ -826,3 +858,4 @@ def validate_conda_requirements(
         )
 
     return result
+
