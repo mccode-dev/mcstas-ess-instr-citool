@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import os
 
-ACTIONS = ["generate", "runci", "list", "json", "pprint"]
+ACTIONS = ["generate", "runci", "list", "check", "json", "pprint"]
 DEFAULT_ACTION = "list"
 
 assert DEFAULT_ACTION in ACTIONS
