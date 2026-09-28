@@ -30,5 +30,25 @@ def runtest( info, outdir ):
     jsonfile = json_files[0]
     print(f"Loading json results from {jsonfile.name}")
     res = json.loads(jsonfile.read_text())
-    #TODO: Use the json results for anything?
+    check_results(res)
+    #TODO: Use the json results for anything else?
     return res
+
+def check_results( res ):
+    """Double-check the mctest json results, since mctest does not always
+    report failures in its exit code (e.g. an instrument with a single
+    %Example which fails to compile)."""
+    problems = []
+    tests = { k : v for k, v in res.items() if k != '_meta' }
+    if not tests:
+        problems.append('no tests found')
+    for name, t in sorted(tests.items()):
+        if not t.get('compiled'):
+            problems.append(f'{name}: did not compile')
+        elif not t.get('didrun'):
+            problems.append(f'{name}: did not run')
+        elif t.get('testval') in (None, -1):
+            problems.append(f'{name}: no test value extracted')
+    if problems:
+        raise RuntimeError('mctest results contain failures:\n  '
+                           + '\n  '.join(problems))

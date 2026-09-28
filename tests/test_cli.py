@@ -68,3 +68,19 @@ def test_generate_instr(example, tmp_path):
             f for f in expected if "/" in f]
         assert (mode / main_or_mode[0]).read_text() == (
             srcdir / main_or_mode[0]).read_text()
+
+
+def test_check_results():
+    from mcstas_ess_instr_citool.runtest import check_results
+    ok = {"compiled": True, "didrun": True, "testval": 1.5e11}
+    check_results({"A": ok, "B_2": ok, "_meta": {"ncount": "1e6"}})
+    for bad, msg in [
+        ({"compiled": False, "didrun": None, "testval": None}, "did not compile"),
+        ({"compiled": True, "didrun": False, "testval": None}, "did not run"),
+        ({"compiled": True, "didrun": True, "testval": -1}, "no test value"),
+        ({"compiled": True, "didrun": True, "testval": None}, "no test value"),
+    ]:
+        with pytest.raises(RuntimeError, match=f"B: {msg}"):
+            check_results({"A": ok, "B": bad, "_meta": {}})
+    with pytest.raises(RuntimeError, match="no tests found"):
+        check_results({"_meta": {}})
