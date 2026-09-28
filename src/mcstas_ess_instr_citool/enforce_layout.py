@@ -6,6 +6,10 @@ import fnmatch
 
 import tomllib  # Python 3.11+ only
 
+def _is_ignored(fname: str) -> bool:
+    # Hidden files (.DS_Store, .#emacs-lock, ...) and backup files (foo~)
+    return fname.startswith('.') or fname.endswith('~')
+
 def enforce_instr_layout(project_dir: str) -> Dict:
     """
     Enforce one of these layouts under `project_dir`:
@@ -13,7 +17,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
     1) project_dir/instr/
        - exactly one PROJECT_main.instr
        - zero or more PROJECT_modeMODENAME.instr
-       - optional files: includes/*.(h|c) and snipperts/*.instr
+       - optional files: includes/*.(h|c) and snippets/*.instr
 
     2) project_dir/instrpy/
        - must contain instrpy/pyproject.toml (PEP 621 only; [project].name required)
@@ -22,9 +26,10 @@ def enforce_instr_layout(project_dir: str) -> Dict:
          - exactly one PROJECT_main.py
          - zero or more PROJECT_modeMODENAME.py
 
-    Other files are in general ignored.
+    Hidden files (names starting with '.') and backup files (names ending
+    with '~') are ignored. Other files are in general ignored.
 
-    PROJECTNAME: [A-Za-z][A-Za-z0-9-]*
+    PROJECTNAME: [A-Za-z][A-Za-z0-9]*
     MODENAME:     [A-Za-z][A-Za-z0-9]*
 
     Returns a dictionary with parsed/validated info.
@@ -52,7 +57,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
             f"Found: instr={has_instr}, instrpy={has_instrpy}."
         )
 
-    project_re = r"(?P<project>[A-Za-z][A-Za-z0-9-]*)"
+    project_re = r"(?P<project>[A-Za-z][A-Za-z0-9]*)"
     mode_re = r"(?P<mode>[A-Za-z][A-Za-z0-9]*)"
 
     def ensure_files_in_dir( base_dir: str,
@@ -63,10 +68,9 @@ def enforce_instr_layout(project_dir: str) -> Dict:
 
         all_files = [
             f for f in os.listdir(base_dir)
-            if not f.endswith('~') and not f=='__pycache__'
+            if not _is_ignored(f) and not f=='__pycache__'
         ]
 
-        allowed_subdirs_found = []
         subdirs = {}
         for e in (subdirpatterns or []):
             e = e.split('/',1)
@@ -76,7 +80,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                 subdirs[e[0]] += [e[1]]
 
         extra_files = {}
-        allowed_subdirs_str = " ".join(subdirs.keys()) or "<none>"
+        allowed_subdirs_str = " ".join(subdirs.keys())
 
         for f in all_files:
             fabs = pathlib.Path(os.path.join(base_dir, f))
@@ -85,9 +89,9 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                 if dirname not in subdirs:
                     raise ValueError(f'Directory {dirname} not allowed in'
                                      f' {base_dir}. Only allowed subdirs'
-                                     f' are: {allowed_subdirs_str}')
+                                     f' are: {allowed_subdirs_str or "<none>"}')
                 for fextra in sorted(fabs.iterdir()):
-                    if '~' in fextra.name:
+                    if _is_ignored(fextra.name):
                         continue
                     if fextra.is_dir():
                         raise ValueError(f'Forbidden subdir: {fextra}')
@@ -96,10 +100,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                         raise ValueError(f'File {fextra.name} not allowed in'
                                          f' {fextra.parent}. Patterns allowed:'
                                          f' {subdirs[dirname]}')
-                    if dirname not in extra_files:
-                        extra_files[dirname] = []
-                        allowed_subdirs_found.append( dirname )
-                    extra_files[dirname].append( fextra.name )
+                    extra_files.setdefault(dirname, []).append( fextra.name )
 
         project_name: Optional[str] = None
         main_path: Optional[str] = None
@@ -109,7 +110,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
 
 
         for fname in all_files:
-            if fname in allowed_subdirs_found:
+            if os.path.isdir(os.path.join(base_dir, fname)):
+                # Allowed subdir (possibly empty), already validated above.
                 continue
 
             if fname == "__init__.py":
@@ -151,7 +153,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                 f"Unexpected file '{fname}' in '{base_dir}'. "
                 f"Only PROJECT_main{ext} and PROJECT_modeMODENAME{ext} files are allowed"
             )
-            if allowed_subdirs_str:
+            if subdirs:
                 errstr += f' - in addition to subdirs: {allowed_subdirs_str}.'
             else:
                 errstr += '.'
@@ -229,7 +231,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
         if os.path.isdir(os.path.join(instrpy_dir, d))
     ]
 
-    subdir_project_re = re.compile(rf"^(?P<project>[A-Za-z][A-Za-z0-9-]*){re.escape(subdir_suffix)}$")
+    subdir_project_re = re.compile(rf"^{project_re}{re.escape(subdir_suffix)}$")
 
     candidates = []
     for d in subdirs:
