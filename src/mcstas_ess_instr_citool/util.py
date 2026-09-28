@@ -1,6 +1,6 @@
 import subprocess
 
-minimum_mcstas_version = (3,7,22)
+minimum_mcstas_version = (3,8,8)
 
 _cache = [None]
 def mcstas_info():
@@ -19,7 +19,6 @@ def mcstas_info():
     major, minor, patch = o.split(".", 2)
     version = ( int(major), int(minor), int(patch) )
     if not version >= minimum_mcstas_version:
-        #fixme test:
         raise RuntimeError('Too old McStas found: '
                            '%i.%i.%i (needs %i.%i.%i)'%(*version,
                                                         *minimum_mcstas_version))

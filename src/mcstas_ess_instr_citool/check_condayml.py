@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .util import minimum_mcstas_version
+
 
 # Every valid environment must contain these as conda dependencies.
 minimal_requirements = {
@@ -17,7 +19,7 @@ minimal_requirements = {
 # Conda packages for which exact versions, upper bounds, or other
 # non-lower-bound constraints are allowed.
 #
-# Lower bounds such as "mcstas >= 3.2.27" are allowed for every package.
+# Lower bounds such as "mcstas >= 3.8.8" are allowed for every package.
 conda_pinning_allowed = set({
     "nosuchpkgyet",
 })
@@ -72,6 +74,13 @@ _OPERATORS = (
 def _normalise_pip_name(name: str) -> str:
     # PEP 503 name normalisation:
     return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def _version_tuple(version: str) -> tuple[int, ...] | None:
+    parts = version.split(".")
+    if not all(part.isdigit() for part in parts):
+        return None
+    return tuple(int(part) for part in parts)
 
 
 def _runtime_error(path: Path, message: str) -> RuntimeError:
@@ -571,7 +580,7 @@ def validate_conda_requirements(
             {
                 "name": "mcstas",
                 "source": "conda",
-                "requirement": ">=3.2.27",
+                "requirement": ">=3.8.8",
             },
             {
                 "name": "pip",
@@ -857,5 +866,36 @@ def validate_conda_requirements(
             "be satisfied through the pip subsection.",
         )
 
+    _validate_mcstas_lower_bound(path, conda_specs)
+
     return result
 
+
+def _validate_mcstas_lower_bound(path: Path, conda_specs: list[str]) -> None:
+    """
+    The mcstas dependency must have an explicit lower bound of at least
+    minimum_mcstas_version, e.g. "mcstas >= 3.8.8".
+    """
+    min_str = ".".join(str(i) for i in minimum_mcstas_version)
+    for raw_spec in conda_specs:
+        package_name, constraints = _split_package_spec(raw_spec, path, "conda")
+        if package_name != "mcstas":
+            continue
+        for operator, version in constraints:
+            if operator not in {">=", ">"}:
+                continue
+            version_tuple = _version_tuple(version)
+            if version_tuple is None:
+                raise _runtime_error(
+                    path,
+                    f"invalid mcstas dependency {raw_spec!r}: could not "
+                    f"parse version {version!r} (expected e.g. {min_str!r}).",
+                )
+            if version_tuple >= minimum_mcstas_version:
+                return
+        raise _runtime_error(
+            path,
+            f"invalid mcstas dependency {raw_spec!r}: it must have an "
+            f"explicit lower bound of at least {min_str}, for example "
+            f"'mcstas >= {min_str}'.",
+        )
