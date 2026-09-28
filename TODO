@@ -1,0 +1,21 @@
+TODO items for mcstas-ess-instr-citool
+======================================
+
+* Instrument names vs. file names: For the instrpy layout the instrument name
+  returned by make() must match the file name (e.g. ESS02_main), but for the
+  instr layout the name in "DEFINE INSTRUMENT" is not checked. In the examples,
+  all ESS01 files use "DEFINE INSTRUMENT ESSinstr_main" and both ESS03 files
+  use "ESS03_Wrapper". Decide whether to enforce the name for the instr layout
+  as well (and update the examples accordingly).
+
+* Inconsistent strictness between layouts: extra files or directories under
+  instr/ are errors, but under instrpy/ anything besides pyproject.toml and the
+  PROJECTNAME_instr/ subdirectory is silently accepted. Decide which files are
+  allowed there (README, tests/, ...) and enforce it.
+
+* runci: MPI support in runtest.py is stubbed out (do_mpi = False, marked
+  FIXME). Make it work.
+
+* runci: The JSON test results produced by mctest are loaded but not used for
+  anything (marked TODO in runtest.py). Decide what to do with them (e.g.
+  summarise, store as CI artifacts, compare between runs).
