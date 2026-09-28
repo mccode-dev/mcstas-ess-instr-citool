@@ -1,0 +1,58 @@
+"""Tests which need McStas (and McStasScript) to be installed."""
+import json
+import shutil
+
+import pytest
+
+from mcstas_ess_instr_citool.cli import main
+from mcstas_ess_instr_citool.generate import generate
+from mcstas_ess_instr_citool.analyse import analyse_dir
+from conftest import EXAMPLES, EXAMPLES_DIR
+
+needs_mcstas = pytest.mark.skipif(
+    not all(shutil.which(c) for c in ["mcstas", "mcrun", "mctest"]),
+    reason="McStas not available",
+)
+
+
+@needs_mcstas
+def test_mcstas_version():
+    from mcstas_ess_instr_citool.util import (mcstas_info,
+                                              minimum_mcstas_version)
+    assert mcstas_info()["version"] >= minimum_mcstas_version
+
+
+def test_generate_instrpy(tmp_path, monkeypatch):
+    pytest.importorskip("mcstasscript")
+    monkeypatch.chdir(tmp_path)  # generate() changes the working directory
+    info = analyse_dir(EXAMPLES_DIR / "ESS02")
+    instrdir = generate(info, tmp_path)
+    files = sorted(p.relative_to(instrdir).as_posix()
+                   for p in instrdir.rglob("*") if p.is_file())
+    assert files == ["MAIN/ESS02_main.instr",
+                     "SomeMode/ESS02_modeSomeMode.instr"]
+    assert "%Example:" in (instrdir / files[0]).read_text()
+
+
+def test_generate_instrpy_timeout(tmp_path, copy_example, monkeypatch):
+    pytest.importorskip("mcstasscript")
+    monkeypatch.chdir(tmp_path)
+    d = copy_example("ESS02")
+    f = d / "instrpy" / "ESS02_instr" / "ESS02_main.py"
+    f.write_text(f.read_text().replace(
+        "def make(input_path=None):\n",
+        "def make(input_path=None):\n    import time; time.sleep(60)\n"))
+    info = analyse_dir(d)
+    outdir = tmp_path / "out"
+    outdir.mkdir()
+    with pytest.raises(TimeoutError, match="timed out after 2 seconds"):
+        generate(info, outdir, pygen_timeout=2)
+
+
+@needs_mcstas
+@pytest.mark.parametrize("example", EXAMPLES)
+def test_runci(example, tmp_path):
+    outdir = tmp_path / "out"
+    main(["-a", "runci", "-o", str(outdir), str(EXAMPLES_DIR / example)])
+    (jsonfile,) = (outdir / "tests").glob("*/testresults_*.json")
+    assert json.loads(jsonfile.read_text())
