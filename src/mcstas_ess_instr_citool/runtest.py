@@ -17,7 +17,7 @@ def runtest( info, outdir ):
     if do_mpi:
         cmd += ['--mpi', str(nprocs) ]
     cmd += [ '--local', str(instrdir), '--testdir', str(testdir) ]
-    print(f"Launching: mctest {shlex.join(cmd)}")
+    print(f"Launching: mctest {shlex.join(cmd)}", flush=True)
     ec = subprocess.run( [ mctest_cmd ] + cmd,
                          check = False, capture_output = False )
     if not ec.returncode==0:
