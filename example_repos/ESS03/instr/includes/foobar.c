@@ -1,8 +1,23 @@
 #include "foobar.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <ctype.h>
 
-int my_foobar_function()
+int foobar_valid_beamline( const char * sector, int beamline )
 {
-  printf("In my_foobar_function\n");
-  return 17;
+  char s = (char)toupper( (unsigned char)sector[0] );
+  int nmax;
+  if ( s == 'N' || s == 'E' ) {
+    nmax = 10;
+  } else if ( s == 'S' || s == 'W' ) {
+    nmax = 11;
+  } else {
+    fprintf( stderr, "ERROR: Invalid sector \"%s\" (must be N, E, S or W)\n", sector );
+    return 0;
+  }
+  if ( beamline < 1 || beamline > nmax ) {
+    fprintf( stderr, "ERROR: Invalid beamline %i for sector %c (must be 1..%i)\n",
+             beamline, s, nmax );
+    return 0;
+  }
+  return 1;
 }

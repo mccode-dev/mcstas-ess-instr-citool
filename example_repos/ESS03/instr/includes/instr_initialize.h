@@ -1,3 +1,5 @@
+if ( !foobar_valid_beamline( sector, beamline ) )
+  exit(1);
 lambdamin=Lmin;
 lambdamax=Lmax;
 XW=1.05*(WidthC+2*WidthT);

@@ -1,3 +1,5 @@
+#include "foobar.c"
+
 double calcAlpha(double length, double radius) {
   // calculate angle of arm after curved guide
   return RAD2DEG * length/radius;

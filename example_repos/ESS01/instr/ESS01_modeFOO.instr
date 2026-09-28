@@ -12,6 +12,8 @@
 * %D
 * Test instrument for the updated BF1 butterfly moderator design including a simple guide with 10 m straight flight-path followed by a 50 m curved guide.
 *
+* FOO mode: same as the main mode, but with an additional wavelength monitor at the end of the guide.
+*
 * The below example gives a 50-50 (statistics-wise) cold/thermal beam at beamline S2.
 * Example: sector=S beamline=2 cold=0.5 Detector: Monitor2_xy1_I=1.59e+11
 *
@@ -320,6 +322,10 @@ COMPONENT Monitor_t = Monitor_nD(
     AT (0, 0, 0) RELATIVE Monitor2_xy1
   
 COMPONENT Flux_end=Monitor_nD(xwidth=0.05,yheight=0.1,filename="Flux_end",options="x, y pr cm2", bins=100)
+  AT (0, 0, 0) RELATIVE Monitor2_xy1
+
+COMPONENT FOO_Lambda_end = Monitor_nD(xwidth=0.05, yheight=0.1, filename="FOO_Lambda_end",
+  options="lambda limits=[0.2 20] bins=100", restore_neutron=1)
   AT (0, 0, 0) RELATIVE Monitor2_xy1
   
 /* /\* Uncomment these helper-arms to view "full" monolith *\/ */
