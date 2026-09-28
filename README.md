@@ -35,6 +35,11 @@ An instrument project is a directory containing:
       `PROJECT_modeMODENAME.py`. Each of these must provide a `make()`
       function returning a McStasScript instrument named after the file
       (e.g. `ESS02_main`).
+    * Optionally an `includes/` subdirectory (inside the python package) with
+      `*.h` and `*.c` files. No other files or subdirectories are allowed.
+      Note that when using the McStasScript instrument directly (rather than
+      via this tool), the `includes/` directory must be copied to the
+      McStasScript `input_path` directory.
 
 `PROJECT` must match `[A-Za-z][A-Za-z0-9]*` and `MODENAME` must match
 `[A-Za-z][A-Za-z0-9]*`. The mode names `main` and `test` are reserved, and
@@ -88,9 +93,9 @@ dependencies:
 
 ## The mcstas-ess-instr-citool tool
 
-Install with `pip install -e .` (Python 3.11 or newer). The `generate` and
-`runci` actions need McStas 3.8.8 or newer (with McStasScript for `instrpy`
-projects), for example from a conda environment created with:
+Install with `pip install -e .` (Python 3.11 or newer). The `generate`,
+`generatepy` and `runci` actions need McStas 3.8.8 or newer (with
+McStasScript for `instrpy` projects), for example from a conda environment created with:
 
 ```
 conda create -n mcstas -c conda-forge --override-channels "mcstas>=3.8.8"
@@ -114,6 +119,14 @@ failing with an error message on any violation. Available actions:
   `includes/` and `snippets/` files are copied. For the `instrpy` layout,
   each `make()` function is called in a separate process (with a timeout of
   600 seconds) and must write exactly one `.instr` file.
+* `generatepy`: generate a complete `instrpy` project in `OUTDIR` (`-o` is
+  required), with `conda.yml`, `instrpy/pyproject.toml` and the python
+  package. For an `instrpy` project, the files are simply copied. For an
+  `instr` project, each `.instr` file is translated with `mcstas-pygen`
+  (`snippets/` are thereby included, and `includes/` files are copied). The
+  instrument is named after the file, `%Example` lines are translated into
+  McStasScript tests (`instr.add_test`), and dates and local paths are
+  removed from the output, so it is reproducible.
 * `runci`: run `generate`, followed by `mctest --strict --local` on the
   result. With `--strict`, each instrument must have at least one `%Example`
   line, and all examples must pass.

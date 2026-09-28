@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import os
 
-ACTIONS = ["generate", "runci", "list", "check", "json", "pprint"]
+ACTIONS = ["generate", "generatepy", "runci", "list", "check", "json", "pprint"]
 DEFAULT_ACTION = "list"
 
 assert DEFAULT_ACTION in ACTIONS
@@ -47,6 +47,8 @@ def parse_args(argv=None,prog=None):
                               ' use a temporarily and autocleaned directory.'))
 
     args = parser.parse_args(argv)
+    if args.action == 'generatepy' and args.outdir is None:
+        parser.error('--outdir is required for action generatepy')
     args.project_dir = Path(args.project_dir)
     return args
 
@@ -95,6 +97,9 @@ def main( argv = None ):
         summary(info)
     elif args.action=='check':
         print("File and directory structure OK")
+    elif args.action=='generatepy':
+        from .generatepy import generatepy
+        generatepy(info,args.outdir)
     elif args.action=='generate':
         from .generate import generate
         with OutDirMgr(args.outdir) as outdir:

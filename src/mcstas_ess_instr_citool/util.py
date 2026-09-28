@@ -12,7 +12,7 @@ def mcstas_info():
         if not c:
             raise RuntimeError(f'Command not found: {n}')
         return c
-    cmds = dict( (n,cmd(n)) for n in ['mcstas','mcrun','mctest'] )
+    cmds = dict( (n,cmd(n)) for n in ['mcstas','mcrun','mctest','mcstas-pygen'] )
     o = subprocess.run( [cmds['mcstas'], "--version-num"],
                         check=True, capture_output=True,
                         text=True ).stdout.strip()

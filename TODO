@@ -19,3 +19,15 @@ TODO items for mcstas-ess-instr-citool
 * runci: The JSON test results produced by mctest are loaded but not used for
   anything (marked TODO in runtest.py). Decide what to do with them (e.g.
   summarise, store as CI artifacts, compare between runs).
+
+* generatepy: The instrument renaming and the translation of %Example lines
+  into McStasScript tests are done by the tool when mcstas-pygen does not
+  support this (McStas 3.8.8). Once a McStas release with these features in
+  mcstas-pygen is required, remove the workarounds in generatepy.py (and
+  consider regenerating the ESS02 example, which was made by hand-editing
+  mcstas-pygen output).
+
+* instrpy projects with includes/: When using the McStasScript instrument
+  directly (rather than via this tool), the includes/ directory must be
+  copied to the McStasScript input_path directory by hand. Consider a better
+  solution (e.g. McStasScript support for include directories).
