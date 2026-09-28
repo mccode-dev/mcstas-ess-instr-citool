@@ -149,6 +149,8 @@ def test_reserved_mode_names(copy_example, mode):
 
 def test_clashing_mode_names(copy_example):
     d = copy_example("ESS01")
+    if (d / "instr" / "ESS01_modefoo.instr").exists():
+        pytest.skip("case-insensitive file system")
     (d / "instr" / "ESS01_modeFoo.instr").touch()
     fails(d, "Clashing mode names")
 
