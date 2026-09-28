@@ -25,6 +25,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
          - empty __init__.py (size == 0)
          - exactly one PROJECT_main.py
          - zero or more PROJECT_modeMODENAME.py
+         - optional files: includes/*.(h|c)
 
     Hidden files (names starting with '.') and backup files (names ending
     with '~') are ignored. Other files are in general ignored.
@@ -256,7 +257,9 @@ def enforce_instr_layout(project_dir: str) -> Dict:
         raise ValueError(f"In 'instrpy/PROJECTNAME_instr', '__init__.py' must be empty (size 0), got {init_size} bytes.")
 
     ext = ".py"
-    payload = ensure_files_in_dir(instrpy_subdir, ext)
+    payload = ensure_files_in_dir(instrpy_subdir, ext,
+                                  ['includes/*.h',
+                                   'includes/*.c'])
 
     if payload["project_name"] != project_name_from_subdir:
         raise ValueError(

@@ -82,8 +82,7 @@ def test_stray_file_instrpy_msg(copy_example):
     with pytest.raises(ValueError) as e:
         analyse_dir(d)
     assert "Unexpected file 'README.md'" in str(e.value)
-    assert "in addition" not in str(e.value)
-    assert str(e.value).endswith("files are allowed.")
+    assert str(e.value).endswith("in addition to subdirs: includes.")
 
 
 def test_file_named_like_subdir(copy_example):
