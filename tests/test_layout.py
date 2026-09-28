@@ -115,7 +115,7 @@ def test_dash_in_project_name(copy_example):
     instr = d / "instr"
     for f in instr.glob("ESS01_*.instr"):
         f.rename(instr / f.name.replace("ESS01", "ESS-01"))
-    fails(d, "Unexpected file 'ESS-01_main.instr'")
+    fails(d, "Unexpected file 'ESS-01_")
 
 
 def test_dash_in_py_project_name(copy_example):

@@ -67,7 +67,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
         mode_pat = re.compile(rf"^{project_re}_mode{mode_re}{re.escape(ext)}$")
 
         all_files = [
-            f for f in os.listdir(base_dir)
+            f for f in sorted(os.listdir(base_dir))
             if not _is_ignored(f) and not f=='__pycache__'
         ]
 
@@ -227,7 +227,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
     # Must contain exactly one subdir named PROJECTNAME_instr
     subdir_suffix = "_instr"
     subdirs = [
-        d for d in os.listdir(instrpy_dir)
+        d for d in sorted(os.listdir(instrpy_dir))
         if os.path.isdir(os.path.join(instrpy_dir, d))
     ]
 
