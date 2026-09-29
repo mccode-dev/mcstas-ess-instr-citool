@@ -62,3 +62,7 @@ TODO items for mcstas-ess-instr-citool
   looks in the working directory, next to the .instr file and in the McStas
   data directories). Propose upstream that such components get a parameter
   for the location of the files.
+
+* Convert one of the real instrument repositories (see the survey of
+  git.esss.dk/dmsc-instrumentmodels) to the standard layout as a pilot, to
+  test the layout rules and the tool in practice.
