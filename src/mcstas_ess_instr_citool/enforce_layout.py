@@ -11,6 +11,15 @@ def _is_ignored(fname: str) -> bool:
     # Hidden files (.DS_Store, .#emacs-lock, ...) and backup files (foo~)
     return fname.startswith('.') or fname.endswith('~')
 
+def _instrument_name(path: str) -> Optional[str]:
+    """Name given by the (first) DEFINE INSTRUMENT statement of an .instr file,
+    ignoring comments."""
+    text = pathlib.Path(path).read_text(encoding="utf-8", errors="replace")
+    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.DOTALL)
+    text = re.sub(r"//[^\n]*", " ", text)
+    m = re.search(r"\bDEFINE\s+INSTRUMENT\s+([A-Za-z_]\w*)", text)
+    return m.group(1) if m else None
+
 def enforce_instr_layout(project_dir: str) -> Dict:
     """
     Enforce one of these layouts under `project_dir`:
@@ -19,6 +28,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
        - exactly one PROJECT_main.instr
        - zero or more PROJECT_modeMODENAME.instr
        - optional files: includes/*.(h|c) and snippets/*.instr
+       - the instrument in each main/mode file must be named after the file
+         (e.g. DEFINE INSTRUMENT PROJECT_main)
 
     2) project_dir/instrpy/
        - must contain instrpy/pyproject.toml (PEP 621 only; [project].name required)
@@ -199,6 +210,11 @@ def enforce_instr_layout(project_dir: str) -> Dict:
             dupes = sorted({m for m in mode_names if mode_names.count(m) > 1})
             raise ValueError(f"Duplicate mode name(s) found: {dupes}")
 
+        if len(set(m.lower() for m in mode_names)) != len(mode_names):
+            raise ValueError("Clashing mode names detected (mode names must"
+                             " differ by more than upper/lower case):"
+                             f" {sorted(mode_names)}")
+
         for pat in ['main','test']:
             if any( m.lower().strip()==pat for m in mode_names ):
                 raise ValueError(f'"{pat}" is not allowed as a mode name')
@@ -241,6 +257,16 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                                       ['includes/*.h',
                                        'includes/*.c',
                                        'snippets/*.instr'])
+        for path in ( [payload["main"]["path"]]
+                      + [m["path"] for m in payload["modes"]] ):
+            expected = pathlib.Path(path).stem
+            found = _instrument_name(path)
+            if found != expected:
+                raise ValueError(
+                    f"The instrument in '{path}' must be named after the"
+                    f" file, i.e. 'DEFINE INSTRUMENT {expected}(...)'"
+                    + (f" (found '{found}')." if found else
+                       " (no DEFINE INSTRUMENT found)."))
         return {
             "project_dir": project_dir,
             "layout": "instr",

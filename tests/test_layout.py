@@ -203,3 +203,28 @@ def test_no_helper_modules_in_instr_layout(copy_example):
     d = copy_example("ESS01")
     (d / "instr" / "utils.instr").touch()
     fails(d, "Unexpected file 'utils.instr'")
+
+
+def test_instrument_name_must_match_file(copy_example):
+    d = copy_example("ESS01")
+    f = d / "instr" / "ESS01_modeFOO.instr"
+    f.write_text(f.read_text().replace("DEFINE INSTRUMENT ESS01_modeFOO",
+                                       "DEFINE INSTRUMENT SomethingElse"))
+    fails(d, r"must be named after the file, i.e. 'DEFINE INSTRUMENT "
+             r"ESS01_modeFOO\(...\)' \(found 'SomethingElse'\)")
+    f.write_text("/* no instrument here */\n")
+    fails(d, "no DEFINE INSTRUMENT found")
+
+
+def test_instrument_name_ignores_comments(copy_example):
+    d = copy_example("ESS01")
+    f = d / "instr" / "ESS01_main.instr"
+    f.write_text("/* DEFINE INSTRUMENT Wrong1 */\n// DEFINE INSTRUMENT Wrong2\n"
+                 + f.read_text())
+    analyse_dir(d)
+
+
+def test_instrument_name_snippets_not_checked():
+    # The snippet in ESS03 defines instrument "ESS03", which is fine:
+    info = analyse_dir(EXAMPLES_DIR / "ESS03")
+    assert info["extra_files"]["snippets"] == ["ESS03.instr"]

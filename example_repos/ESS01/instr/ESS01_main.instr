@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: ESSinstr_main
+* Instrument: ESS01_main
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
@@ -40,7 +40,7 @@
 * Benchmarking website available at <a href="http://ess_butterfly.mcstas.org">http://ess_butterfly.mcstas.org</a>
 * %E
 *******************************************************************************/
-DEFINE INSTRUMENT ESSinstr_main(string sector="S",
+DEFINE INSTRUMENT ESS01_main(string sector="S",
   int beamline=2,Lmin=0.2,Lmax=20,c_performance=1,t_performance=1,
   int index=0,dist=2,cold=0.5,Yheight=0.03,delta=0,int n_pulses=1,int allmons=0)
 

@@ -27,6 +27,8 @@ An instrument project is a directory containing:
       a `snippets/` subdirectory with `*.instr` files (for use via `%include`
       in the main and mode files). No other files or subdirectories are
       allowed.
+    * The instrument in each main and mode file must be named after the file,
+      e.g. `DEFINE INSTRUMENT ESS01_main(...)` in `ESS01_main.instr`.
   * `instrpy/`: McStasScript python files:
     * An `instrpy/pyproject.toml` with a PEP 621 `[project]` table whose
       `name` matches `PROJECT`.
