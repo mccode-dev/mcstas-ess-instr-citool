@@ -26,7 +26,7 @@ TODO items for mcstas-ess-instr-citool
 
 * %Example lines without any parameters fail in mctest (the instrument then
   asks for the parameter values interactively). An upstream fix for mctest
-  has been proposed (McCode branch mctest-example-defaults, which passes -y
-  for such lines). Until a McStas release with this fix is required, such
+  has been proposed in https://github.com/mccode-dev/McCode/pull/2708 (which
+  passes -y for such lines). Until a McStas release with this fix is required, such
   lines must list at least one parameter (as done by add_example in the
   ESS04 example).
