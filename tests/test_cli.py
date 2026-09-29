@@ -84,3 +84,27 @@ def test_check_results():
             check_results({"A": ok, "B": bad, "_meta": {}})
     with pytest.raises(RuntimeError, match="no tests found"):
         check_results({"_meta": {}})
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "abc", "1.5"])
+def test_mpi_invalid(value, capsys):
+    with pytest.raises(SystemExit):
+        main(["-a", "runci", "--mpi", value, str(EXAMPLES_DIR / "ExInstrBasic")])
+    assert "must be a positive integer" in capsys.readouterr().err
+
+
+def test_mpi_only_for_runci(capsys):
+    with pytest.raises(SystemExit):
+        main(["-a", "generate", "--mpi", "2",
+              str(EXAMPLES_DIR / "ExInstrBasic")])
+    assert "--mpi can only be used with action runci" in capsys.readouterr().err
+
+
+def test_mctest_args():
+    from mcstas_ess_instr_citool.runtest import mctest_args
+    from mcstas_ess_instr_citool.util import get_nprocs
+    base = ["--local", "INSTR", "--testdir", "TESTS"]
+    assert mctest_args("INSTR", "TESTS") == ["--strict"] + base
+    assert mctest_args("INSTR", "TESTS", 3) == ["--strict", "--mpi", "3"] + base
+    assert mctest_args("INSTR", "TESTS", "auto") == [
+        "--strict", "--mpi", str(get_nprocs())] + base

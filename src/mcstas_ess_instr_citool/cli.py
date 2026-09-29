@@ -19,6 +19,18 @@ def output_dir(value):
         raise argparse.ArgumentTypeError(f"parent directory {p.parent} does not exist")
     return p
 
+def mpi_value(value):
+    if value == 'auto':
+        return value
+    try:
+        n = int(value)
+    except ValueError:
+        n = 0
+    if n < 1:
+        raise argparse.ArgumentTypeError(
+            f'invalid value {value!r} (must be a positive integer or "auto")')
+    return n
+
 def parse_args(argv=None,prog=None):
     if argv is None:
         import sys
@@ -46,7 +58,15 @@ def parse_args(argv=None,prog=None):
                               ' Must be empty or non-existing). Default is to'
                               ' use a temporarily and autocleaned directory.'))
 
+    parser.add_argument('--mpi', type=mpi_value, metavar='N', default=None,
+                        help=('Compile and run the instruments with MPI, using'
+                              ' N processes (or "auto" for the number of'
+                              ' available processors). Only for action runci.'
+                              ' Default is to not use MPI.'))
+
     args = parser.parse_args(argv)
+    if args.mpi is not None and args.action != 'runci':
+        parser.error('--mpi can only be used with action runci')
     if args.action == 'generatepy' and args.outdir is None:
         parser.error('--outdir is required for action generatepy')
     args.project_dir = Path(args.project_dir)
@@ -108,7 +128,7 @@ def main( argv = None ):
         assert args.action=='runci'
         from .runtest import runtest
         with OutDirMgr(args.outdir) as outdir:
-            runtest(info,outdir)
+            runtest(info,outdir,mpi=args.mpi)
 
 if __name__ == "__main__":
     main()

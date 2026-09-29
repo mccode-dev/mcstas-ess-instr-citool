@@ -56,3 +56,24 @@ def test_runci(example, tmp_path):
     main(["-a", "runci", "-o", str(outdir), str(EXAMPLES_DIR / example)])
     (jsonfile,) = (outdir / "tests").glob("*/testresults_*.json")
     assert json.loads(jsonfile.read_text())
+
+
+needs_mpi = pytest.mark.skipif(
+    not (shutil.which("mpirun") or shutil.which("mpiexec")),
+    reason="MPI not available",
+)
+
+
+@needs_mcstas
+@needs_mpi
+def test_runci_mpi(tmp_path):
+    outdir = tmp_path / "out"
+    main(["-a", "runci", "--mpi", "2", "-o", str(outdir),
+          str(EXAMPLES_DIR / "ExPyHelpers")])
+    (jsonfile,) = (outdir / "tests").glob("*/testresults_*.json")
+    assert json.loads(jsonfile.read_text())
+    # The simulations really ran with MPI:
+    run_outputs = list((outdir / "tests").rglob("run_stdout_*.txt"))
+    assert run_outputs
+    for f in run_outputs:
+        assert "running on 2 nodes" in f.read_text(errors="replace")

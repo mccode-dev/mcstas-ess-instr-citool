@@ -2,21 +2,26 @@ import subprocess
 import shlex
 import json
 
-def runtest( info, outdir ):
+def mctest_args( instrdir, testdir, mpi = None ):
+    """Arguments for mctest. If mpi is an integer or "auto" (meaning the
+    number of available processors), the instruments are compiled and run
+    with MPI, using that number of processes."""
+    cmd = [ '--strict' ]
+    if mpi is not None:
+        if mpi == 'auto':
+            from .util import get_nprocs
+            mpi = get_nprocs()
+        cmd += [ '--mpi', str(int(mpi)) ]
+    cmd += [ '--local', str(instrdir), '--testdir', str(testdir) ]
+    return cmd
+
+def runtest( info, outdir, mpi = None ):
     from .util import mcstas_info
     from .generate import generate
-    do_mpi = False # FIXME make this work
-    if do_mpi:
-        from .util import get_nprocs
-        nprocs = get_nprocs()
     mctest_cmd = mcstas_info()['cmd']['mctest']
     instrdir = generate( info, outdir )
     testdir = outdir.joinpath('tests').absolute().resolve()
-    cmd = []
-    cmd += [ '--strict' ]
-    if do_mpi:
-        cmd += ['--mpi', str(nprocs) ]
-    cmd += [ '--local', str(instrdir), '--testdir', str(testdir) ]
+    cmd = mctest_args( instrdir, testdir, mpi )
     print(f"Launching: mctest {shlex.join(cmd)}", flush=True)
     ec = subprocess.run( [ mctest_cmd ] + cmd,
                          check = False, capture_output = False )

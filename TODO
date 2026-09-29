@@ -1,8 +1,11 @@
 TODO items for mcstas-ess-instr-citool
 ======================================
 
-* runci: MPI support in runtest.py is stubbed out (do_mpi = False, marked
-  FIXME). Make it work.
+* runci: Consider running the tests of the different modes in parallel (as
+  independent mctest runs, each with its own test directory), to make CI
+  faster for projects with several modes. MPI (runci --mpi) does not help
+  much for typical tests, since compilation with MPI takes longer, and the
+  default mctest simulations are short.
 
 * runci: The JSON test results produced by mctest are only used to check for
   failures which mctest did not report in its exit code (see check_results

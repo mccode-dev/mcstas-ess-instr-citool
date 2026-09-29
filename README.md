@@ -129,7 +129,7 @@ conda create -n mcstas -c conda-forge --override-channels "mcstas>=3.8.8"
 Usage:
 
 ```
-mcstas-ess-instr-citool [-a ACTION] [-o OUTDIR] PROJECT_DIR
+mcstas-ess-instr-citool [-a ACTION] [-o OUTDIR] [--mpi N] PROJECT_DIR
 ```
 
 All actions first validate the project layout and the `conda.yml` file,
@@ -157,6 +157,11 @@ failing with an error message on any violation. Available actions:
 * `runci`: run `generate`, followed by `mctest --strict --local` on the
   result. With `--strict`, each instrument must have at least one `%Example`
   line, and all examples must pass.
+  With `--mpi N` (or `--mpi auto` for the number of available processors),
+  the instruments are compiled and run with MPI, using N processes. This
+  tests that the instruments work with MPI. It does not necessarily make
+  the tests faster, since compilation with MPI takes longer, and the default
+  `mctest` simulations are short.
 
 If `-o OUTDIR` is not given (it must be empty or not exist), a temporary
 directory is used and cleaned up afterwards.
