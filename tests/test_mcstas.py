@@ -86,3 +86,8 @@ def test_runci_rejects_shadowing_component(copy_example, tmp_path):
     (comps / "ExCountMonitor.comp").rename(comps / "Arm.comp")
     with pytest.raises(RuntimeError, match="must not have the same names.*Arm"):
         main(["-a", "runci", "-o", str(tmp_path / "out"), str(d)])
+    (comps / "Arm.comp").rename(comps / "ExCountMonitor.comp")
+    (comps / "union-lib.c").touch()
+    with pytest.raises(RuntimeError,
+                       match="must not have the same names.*union-lib.c"):
+        main(["-a", "runci", "-o", str(tmp_path / "out2"), str(d)])

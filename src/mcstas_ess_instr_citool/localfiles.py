@@ -29,13 +29,19 @@ def subdir_patterns( prefix = '' ):
 
 def standard_component_names( resourcedir ):
     """Names of the components in the McStas library (except examples)."""
+    return { f.stem for f in _library_files( resourcedir, '*.comp' ) }
+
+def standard_library_file_names( resourcedir ):
+    """File names of the C libraries (*.c, *.h) in the McStas library (except
+    examples), e.g. read_table-lib.c."""
+    return { f.name for pattern in ('*.c', '*.h')
+             for f in _library_files( resourcedir, pattern ) }
+
+def _library_files( resourcedir, pattern ):
     resourcedir = Path(resourcedir)
-    names = set()
-    for f in resourcedir.rglob('*.comp'):
-        if 'examples' in f.relative_to(resourcedir).parts:
-            continue
-        names.add(f.stem)
-    return names
+    for f in resourcedir.rglob(pattern):
+        if 'examples' not in f.relative_to(resourcedir).parts:
+            yield f
 
 def mcstas_resourcedir():
     from .util import mcstas_info
@@ -45,20 +51,23 @@ def mcstas_resourcedir():
                            check = True ).stdout.strip()
 
 def check_local_components( info, resourcedir = None ):
-    """Raise an error if a component in localcomps/ has the same name as a
-    component in the McStas library (it would shadow that component)."""
-    comps = [ fn for fn in info['extra_files'].get('localcomps', [])
-              if fnmatch.fnmatch(fn, '*.comp') ]
-    if not comps:
+    """Raise an error if a component (or C library file) in localcomps/ has
+    the same name as a component (or C library file) in the McStas library,
+    since it would shadow that."""
+    files = info['extra_files'].get('localcomps', [])
+    if not files:
         return
     if resourcedir is None:
         resourcedir = mcstas_resourcedir()
-    standard = standard_component_names( resourcedir )
-    shadowing = sorted( Path(fn).stem for fn in comps
-                        if Path(fn).stem in standard )
+    std_comps = standard_component_names( resourcedir )
+    std_libs = standard_library_file_names( resourcedir )
+    shadowing = sorted(
+        fn for fn in files
+        if ( fnmatch.fnmatch(fn, '*.comp') and Path(fn).stem in std_comps )
+        or ( not fnmatch.fnmatch(fn, '*.comp') and fn in std_libs ) )
     if shadowing:
         raise RuntimeError(
-            'Local components must not have the same names as components'
-            ' in the McStas library (which they would shadow): '
-            + ', '.join(shadowing) + '. Please rename them (or use the'
-            ' McStas library versions).')
+            'Files in localcomps/ must not have the same names as components'
+            ' or C library files in the McStas library (which they would'
+            ' shadow): ' + ', '.join(shadowing) + '. Please rename them (or'
+            ' use the McStas library versions).')

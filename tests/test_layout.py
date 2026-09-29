@@ -306,9 +306,18 @@ def test_local_component_shadowing(tmp_path):
     (resdir / "optics" / "Arm.comp").touch()
     (resdir / "examples" / "Some").mkdir(parents=True)
     (resdir / "examples" / "Some" / "ExampleOnly.comp").touch()
+    (resdir / "share").mkdir()
+    (resdir / "share" / "union-lib.c").touch()
+    (resdir / "share" / "read_table-lib.h").touch()
     info = {"extra_files": {"localcomps": ["Arm.comp", "Mine.comp", "lib.c"]}}
-    with pytest.raises(RuntimeError, match="must not have the same names.*: Arm\\."):
+    with pytest.raises(RuntimeError,
+                       match="must not have the same names.*: Arm.comp\\."):
         check_local_components(info, resdir)
-    for comps in (["Mine.comp", "ExampleOnly.comp", "lib.c"], []):
+    info = {"extra_files": {"localcomps": ["union-lib.c", "read_table-lib.h",
+                                           "union-lib.comp"]}}
+    with pytest.raises(RuntimeError,
+                       match=": read_table-lib.h, union-lib.c\\."):
+        check_local_components(info, resdir)
+    for comps in (["Mine.comp", "ExampleOnly.comp", "lib.c", "Arm.c"], []):
         check_local_components({"extra_files": {"localcomps": comps}}, resdir)
     check_local_components({"extra_files": {}}, resdir)
