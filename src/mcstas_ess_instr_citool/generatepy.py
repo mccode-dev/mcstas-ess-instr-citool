@@ -48,6 +48,8 @@ def _copy_instrpy( info, outdir ):
     (pkgdir / '__init__.py').write_text('')
     for path in info['setups'].values():
         shutil.copyfile(path, pkgdir / Path(path).name)
+    for module in info['helper_modules']:
+        shutil.copyfile(srcpkgdir / f'{module}.py', pkgdir / f'{module}.py')
     _copy_extra_files( info, srcpkgdir, pkgdir )
 
 

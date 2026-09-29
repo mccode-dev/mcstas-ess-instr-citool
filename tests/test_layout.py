@@ -33,6 +33,11 @@ def test_example_details():
                      "instr_initialize.h"],
         "snippets": ["ESS03.instr"],
     }
+    assert info["helper_modules"] == []
+    info = analyse_dir(EXAMPLES_DIR / "ESS04")
+    assert info["layout"] == "instrpy"
+    assert info["mode_names"] == ["Long"]
+    assert info["helper_modules"] == ["common", "geometry", "monitors"]
 
 
 def test_missing_condayml(copy_example):
@@ -171,3 +176,30 @@ def test_instrpy_missing_pyproject(copy_example):
     d = copy_example("ESS02")
     (d / "instrpy" / "pyproject.toml").unlink()
     fails(d, "pyproject.toml must exist")
+
+
+def test_helper_modules(copy_example):
+    d = copy_example("ESS02")
+    pkg = d / "instrpy" / "ESS02_instr"
+    (pkg / "utils.py").touch()
+    (pkg / "_private.py").touch()
+    assert analyse_dir(d)["helper_modules"] == ["_private", "utils"]
+
+
+@pytest.mark.parametrize("fname,match", [
+    ("ESS02_utils.py", "Files named ESS02_\\* must be either"),
+    ("ESS02_mode_foo.py", "Files named ESS02_\\* must be either"),
+    ("my-utils.py", "Invalid helper module name 'my-utils.py'"),
+    ("import.py", "Invalid helper module name 'import.py'"),
+    ("utils.txt", r"Unexpected file 'utils.txt'.*helper modules named"),
+])
+def test_bad_helper_modules(copy_example, fname, match):
+    d = copy_example("ESS02")
+    (d / "instrpy" / "ESS02_instr" / fname).touch()
+    fails(d, match)
+
+
+def test_no_helper_modules_in_instr_layout(copy_example):
+    d = copy_example("ESS01")
+    (d / "instr" / "utils.instr").touch()
+    fails(d, "Unexpected file 'utils.instr'")

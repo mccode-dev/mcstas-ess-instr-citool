@@ -131,12 +131,13 @@ def test_generatepy_requires_outdir(capsys):
     assert "--outdir is required" in capsys.readouterr().err
 
 
-def test_generatepy_from_instrpy(tmp_path):
+@pytest.mark.parametrize("example", ["ESS02", "ESS04"])
+def test_generatepy_from_instrpy(example, tmp_path):
     outdir = tmp_path / "out"
     main(["-a", "generatepy", "-o", str(outdir),
-          str(EXAMPLES_DIR / "ESS02")])
+          str(EXAMPLES_DIR / example)])
     src = tmp_path / "src"
-    shutil.copytree(EXAMPLES_DIR / "ESS02", src,
+    shutil.copytree(EXAMPLES_DIR / example, src,
                     ignore=shutil.ignore_patterns("__pycache__"))
     assert_same_dirs(src, outdir)
 

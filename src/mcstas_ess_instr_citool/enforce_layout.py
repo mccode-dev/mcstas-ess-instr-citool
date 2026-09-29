@@ -1,3 +1,4 @@
+import keyword
 import os
 import re
 from typing import Dict, List, Optional
@@ -25,6 +26,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
          - empty __init__.py (size == 0)
          - exactly one PROJECT_main.py
          - zero or more PROJECT_modeMODENAME.py
+         - zero or more helper modules MODULE.py (MODULE must be a valid
+           python identifier, not starting with PROJECT_)
          - optional files: includes/*.(h|c)
 
     Hidden files (names starting with '.') and backup files (names ending
@@ -63,7 +66,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
 
     def ensure_files_in_dir( base_dir: str,
                              ext: str,
-                             subdirpatterns : list[str] | None = None ) -> Dict:
+                             subdirpatterns : list[str] | None = None,
+                             allow_helpers : bool = False ) -> Dict:
         main_pat = re.compile(rf"^{project_re}_main{re.escape(ext)}$")
         mode_pat = re.compile(rf"^{project_re}_mode{mode_re}{re.escape(ext)}$")
 
@@ -105,6 +109,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
 
         project_name: Optional[str] = None
         main_path: Optional[str] = None
+        helper_files: List[str] = []
         mode_names: List[str] = []
         mode_paths: List[str] = []
         main_count = 0
@@ -150,10 +155,17 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                 mode_paths.append(os.path.join(base_dir, fname))
                 continue
 
+            if allow_helpers and fname.endswith(ext):
+                # Validated below, when the project name is known:
+                helper_files.append(fname)
+                continue
+
             errstr = (
                 f"Unexpected file '{fname}' in '{base_dir}'. "
                 f"Only PROJECT_main{ext} and PROJECT_modeMODENAME{ext} files are allowed"
             )
+            if allow_helpers:
+                errstr += f' (and helper modules named MODULE{ext})'
             if subdirs:
                 errstr += f' - in addition to subdirs: {allowed_subdirs_str}.'
             else:
@@ -167,6 +179,21 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                 f"Must have exactly one file named '{project_name}_main{ext}' in '{base_dir}'. "
                 f"Found {main_count}."
             )
+
+        helper_modules = []
+        for fname in sorted(helper_files):
+            stem = fname[:-len(ext)]
+            if stem.startswith(f"{project_name}_"):
+                raise ValueError(
+                    f"Unexpected file '{fname}' in '{base_dir}'. Files named"
+                    f" {project_name}_* must be either {project_name}_main{ext}"
+                    f" or {project_name}_modeMODENAME{ext} (with MODENAME"
+                    " matching [A-Za-z][A-Za-z0-9]*).")
+            if not stem.isidentifier() or keyword.iskeyword(stem):
+                raise ValueError(
+                    f"Invalid helper module name '{fname}' in '{base_dir}'."
+                    " Helper module names must be valid python identifiers.")
+            helper_modules.append(stem)
 
         if len(set(mode_names)) != len(mode_names):
             dupes = sorted({m for m in mode_names if mode_names.count(m) > 1})
@@ -186,6 +213,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                 for mode, path in sorted(zip(mode_names, mode_paths), key=lambda x: x[0])
             ],
             "mode_names": sorted(mode_names),
+            "helper_modules": helper_modules,
         }
 
     def normalize_pkg_name(name: str) -> str:
@@ -259,7 +287,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
     ext = ".py"
     payload = ensure_files_in_dir(instrpy_subdir, ext,
                                   ['includes/*.h',
-                                   'includes/*.c'])
+                                   'includes/*.c'],
+                                  allow_helpers = True)
 
     if payload["project_name"] != project_name_from_subdir:
         raise ValueError(

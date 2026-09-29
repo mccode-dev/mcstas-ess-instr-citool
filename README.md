@@ -35,6 +35,11 @@ An instrument project is a directory containing:
       `PROJECT_modeMODENAME.py`. Each of these must provide a `make()`
       function returning a McStasScript instrument named after the file
       (e.g. `ESS02_main`).
+    * Optionally helper modules `MODULE.py` in the same directory, for code
+      shared between the main and mode files (imported with relative
+      imports like `from .common import build`). `MODULE` must be a valid
+      python identifier, and must not start with `PROJECT_` (so misnamed
+      mode files are not silently accepted as helper modules).
     * Optionally an `includes/` subdirectory (inside the python package) with
       `*.h` and `*.c` files. No other files or subdirectories are allowed.
       Note that when using the McStasScript instrument directly (rather than
@@ -90,6 +95,11 @@ dependencies:
 * `example_repos/ESS03`: classic `.instr` files using shared C code from
   `includes/` and an entire instrument pulled in from `snippets/` via
   `%include`.
+* `example_repos/ESS04`: a small hand-written McStasScript instrument (source,
+  guide and monitors), with a main instrument and one mode (`Long`) built from
+  code shared in the helper modules `common.py`, `geometry.py` and
+  `monitors.py`. It also shows how to add `%Example` tests with other
+  parameter values than the defaults.
 
 ## The mcstas-ess-instr-citool tool
 
