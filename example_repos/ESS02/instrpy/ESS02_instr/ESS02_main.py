@@ -2,8 +2,7 @@
 # Automatically generated file. 
 # Format:    Python script code
 # McStas <http://www.mcstas.org>
-# Instrument: ESS02_main.instr (ESSinstr_main)
-# Date:       Fri Aug 21 11:38:16 2026
+# Instrument: ESS02_main.instr (ESS02_main)
 # File:       ESS02_main.py
 
 import mcstasscript as ms
@@ -19,7 +18,6 @@ def make(input_path=None):
     # *****************************************************************************
     # * Start of instrument 'ESS02_main' generated code
     # *****************************************************************************
-    # MCSTAS system dir is "/Users/peterwillendrup/micromamba/envs/mcstas-dev/share/mcstas/resources/"
 
 
     # *****************************************************************************
@@ -1525,16 +1523,16 @@ def make(input_path=None):
     DummyArm5 = instr.add_component('DummyArm5','Arm', AT=['6', '0', '6'])
     
     
+    # Tests corresponding to the %Example lines of the instrument. The
+    # parameter values are restored afterwards, since add_test uses the
+    # current parameter values:
+    _parameter_values = {p: instr.parameters[p].value for p in instr.get_parameter_names()}
+    instr.set_parameters({'sector': 'S', 'beamline': 2, 'cold': 0.5})
+    instr.add_test('Monitor2_xy1', intensity=1.59e+11, included_pars=['sector', 'beamline', 'cold'])
+    instr.set_parameters(_parameter_values)
+
     # Instruct McStasscript not to 'check everythng'
     instr.settings(checks=False)
-
-    # PWFIXME: Parameters added by hand.
-    # PWTODO:  Add check for local "tests.py" or equivalent + run and add from there?
-    instr.set_parameters(sector='"S"')
-    instr.set_parameters(beamline=2)
-    instr.set_parameters(cold=0.5)
-    instr.add_test("Monitor2_xy1", intensity=1.59e+11, included_pars=["sector","beamline","cold"])
-
     return instr
 
 
@@ -1593,4 +1591,4 @@ if __name__ == '__main__':
     #data = sim_widget.get_data()
 
 
-# end of generated Python code ESS01_main_generated.py 
+# end of generated Python code ESS02_main.py
