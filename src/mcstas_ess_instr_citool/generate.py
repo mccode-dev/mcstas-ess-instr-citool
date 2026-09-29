@@ -56,6 +56,8 @@ def _worker(conn, name, srcpath, outdir):
         package = package.parent
         assert not (package / "__init__.py").is_file(), "spurious __init__.py"
         assert len(parts)==2
+        # Do not write __pycache__ directories into the project:
+        sys.dont_write_bytecode = True
         sys.path.insert(0, str(package))
         impname = ".".join(parts)
         print(f"Importing {impname}")
