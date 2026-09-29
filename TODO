@@ -52,9 +52,12 @@ TODO items for mcstas-ess-instr-citool
 * NCrystal resolves relative paths of data files (e.g.
   "localdata/X.ncmat") only relative to the working directory, unlike McStas
   components using read_table-lib, which also look relative to the .instr
-  file. Consider proposing upstream that the NCrystal McStas components also
-  look relative to the .instr file, so instruments can also be run from other
-  directories.
+  file. A fix has been prepared for McCode (branch
+  ncrystal-localdata-search-path in tkittel/McCode): NCrystal_sample,
+  NCrystal_process and PowderN add the directory of the .instr file to the
+  NCrystal search path if it has a localdata/ subdirectory. Once released,
+  update the README (instruments using NCrystal then also work when not run
+  from their own directory).
 
 * Components which read data files by fixed file names, like the McStas
   3.8.8 Union_abs_logger_nD_scintillator.comp (used by SKADI), which reads
