@@ -7,6 +7,8 @@ import fnmatch
 
 import tomllib  # Python 3.11+ only
 
+from .localfiles import subdir_patterns
+
 def _is_ignored(fname: str) -> bool:
     # Hidden files (.DS_Store, .#emacs-lock, ...) and backup files (foo~)
     return fname.startswith('.') or fname.endswith('~')
@@ -28,6 +30,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
        - exactly one PROJECT_main.instr
        - zero or more PROJECT_modeMODENAME.instr
        - optional files: includes/*.(h|c) and snippets/*.instr
+       - optional local components localcomps/*.(comp|c|h) and data files
+         localdata/* (only certain types, see localfiles.py)
        - the instrument in each main/mode file must be named after the file
          (e.g. DEFINE INSTRUMENT PROJECT_main)
 
@@ -41,7 +45,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
          - zero or more PROJECT_modeMODENAME.py
          - zero or more helper modules MODULE.py (MODULE must be a valid
            python identifier, not starting with PROJECT_)
-         - optional files: includes/*.(h|c)
+         - optional files: includes/*.(h|c), localcomps/*.(comp|c|h) and
+           localdata/* (only certain types, see localfiles.py)
 
     Hidden files (names starting with '.') and backup files (names ending
     with '~') are ignored. Other files are in general ignored.
@@ -258,7 +263,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
         payload = ensure_files_in_dir(instr_dir, ext,
                                       ['includes/*.h',
                                        'includes/*.c',
-                                       'snippets/*.instr'])
+                                       'snippets/*.instr']
+                                      + subdir_patterns())
         for path in ( [payload["main"]["path"]]
                       + [m["path"] for m in payload["modes"]] ):
             expected = pathlib.Path(path).stem
@@ -326,7 +332,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
     ext = ".py"
     payload = ensure_files_in_dir(instrpy_subdir, ext,
                                   ['includes/*.h',
-                                   'includes/*.c'],
+                                   'includes/*.c']
+                                  + subdir_patterns(),
                                   allow_helpers = True)
 
     if payload["project_name"] != project_name_from_subdir:

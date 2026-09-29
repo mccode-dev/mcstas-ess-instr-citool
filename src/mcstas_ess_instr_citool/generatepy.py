@@ -93,16 +93,22 @@ def _generate_from_instr( info, outdir ):
         code = postprocess_pygen_output( code, path.stem, path.read_text() )
         if 'includes' in info['extra_files']:
             code = add_includes_search_path( code )
+        code = add_local_files_code(
+            code,
+            localcomps = 'localcomps' in info['extra_files'],
+            localdata = 'localdata' in info['extra_files'] )
         (pkgdir / f'{path.stem}.py').write_text(code)
 
-    # The includes/ files are needed by the generated code, while the
-    # snippets/ have already been included by mcstas-pygen:
+    # The includes/, localcomps/ and localdata/ files are needed by the
+    # generated code, while the snippets/ have already been included by
+    # mcstas-pygen:
+    subdirs = ['includes', 'localcomps', 'localdata']
     _copy_extra_files( info, Path(info['base_dir']), pkgdir,
-                       subdirs = ['includes'] )
+                       subdirs = subdirs )
 
     (outdir / 'instrpy' / 'pyproject.toml').write_text(
         _pyproject_toml( project, pkgname,
-                         'includes' in info['extra_files'] ))
+                         [ d for d in subdirs if d in info['extra_files'] ] ))
 
 
 def postprocess_pygen_output( code, name, instr_text ):
@@ -164,16 +170,70 @@ def add_includes_search_path( code ):
     python package to the search path of the C compiler (via the DEPENDENCY
     line), so #include "includes/..." works wherever the instrument is
     written and compiled by McStasScript."""
+    code = _add_import( code, 'pathlib' )
+    return _insert_after_dependency_line( code, _INCLUDES_CODE )
+
+
+_LOCALCOMPS_CODE = """\
+    # Let McStas(Script) find the components in localcomps/ in this python
+    # package:
+    instr.add_search((pathlib.Path(__file__).resolve().parent
+                      / 'localcomps').as_posix())
+"""
+
+_LOCALDATA_CODE = """\
+    # The instrument refers to data files as "localdata/<file>", relative to
+    # the directory in which it runs, i.e. the McStasScript input_path. So
+    # copy localdata/ from this python package there:
+    _localdata_src = pathlib.Path(__file__).resolve().parent / 'localdata'
+    _localdata_dest = pathlib.Path(instr.input_path).resolve() / 'localdata'
+    if _localdata_dest != _localdata_src:
+        shutil.copytree(_localdata_src, _localdata_dest, dirs_exist_ok=True)
+"""
+
+
+def add_local_files_code( code, localcomps, localdata ):
+    """Add code to generated instrument code, which makes the files in
+    localcomps/ and localdata/ in the python package available to the
+    instrument (mcstas-pygen drops the SEARCH statements of the .instr)."""
+    block = ''
+    if localcomps:
+        code = _add_import( code, 'pathlib' )
+        block += _LOCALCOMPS_CODE
+    if localdata:
+        code = _add_import( code, 'pathlib' )
+        code = _add_import( code, 'shutil' )
+        block += _LOCALDATA_CODE
+    if not block:
+        return code
+    return _insert_after_dependency_line( code, block, after_blocks = True )
+
+
+def _add_import( code, module ):
+    if f'import {module}\n' in code:
+        return code
     if code.count('import argparse\n') != 1:
         raise RuntimeError('Could not find imports in output of mcstas-pygen')
-    code = code.replace('import argparse\n', 'import argparse\nimport pathlib\n')
+    return code.replace('import argparse\n',
+                        f'import argparse\nimport {module}\n')
+
+
+def _insert_after_dependency_line( code, block, after_blocks = False ):
+    """Insert block after the set_dependency line (which comes right after the
+    instrument creation, before any components are added). With
+    after_blocks, it is inserted after other blocks already inserted there
+    (i.e. after the following non-empty lines)."""
     lines = code.splitlines(keepends=True)
     idx = [i for i, line in enumerate(lines)
            if line.startswith('    instr.set_dependency(')]
     if len(idx) != 1:
         raise RuntimeError('Could not find the DEPENDENCY line in output of'
                            ' mcstas-pygen')
-    lines.insert(idx[0] + 1, _INCLUDES_CODE)
+    pos = idx[0] + 1
+    if after_blocks:
+        while pos < len(lines) and lines[pos].strip():
+            pos += 1
+    lines.insert(pos, block)
     return ''.join(lines)
 
 
@@ -248,7 +308,7 @@ def _is_number( s ):
     return True
 
 
-def _pyproject_toml( project, pkgname, has_includes ):
+def _pyproject_toml( project, pkgname, datadirs ):
     res = f'''[build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
@@ -263,9 +323,10 @@ dependencies = []
 [tool.setuptools]
 packages = ["{pkgname}"]
 '''
-    if has_includes:
+    if datadirs:
+        patterns = ', '.join(f'"{d}/*"' for d in datadirs)
         res += f'''
 [tool.setuptools.package-data]
-{pkgname} = ["includes/*.h", "includes/*.c"]
+{pkgname} = [{patterns}]
 '''
     return res

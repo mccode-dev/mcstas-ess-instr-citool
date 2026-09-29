@@ -27,11 +27,13 @@ def generate( info, outdir, pygen_timeout = DEFAULT_PYGEN_TIMEOUT ):
         d.mkdir()
         os.chdir(d)
         genfct( k, P(v), d )
-        # For the instr layout, the extra files (includes/ and snippets/) are
-        # needed next to the .instr files. For the instrpy layout, the
-        # instruments must themselves make the C compiler find the files in
-        # includes/ in the python package (e.g. via their DEPENDENCY line),
-        # since that is also needed when using them directly:
+        # For the instr layout, the extra files (includes/, snippets/,
+        # localcomps/ and localdata/) are needed next to the .instr files.
+        # For the instrpy layout, the instruments must themselves make the
+        # files in their python package available (includes/ via their
+        # DEPENDENCY line, localcomps/ via add_search, and localdata/ by
+        # copying it to their input_path), since that is also needed when
+        # using them directly:
         extra_files = info["extra_files"] if info["layout"] == "instr" else {}
         for subdirname, fns in sorted(extra_files.items()):
             sd = d.joinpath(subdirname)
@@ -79,6 +81,9 @@ def _worker(conn, name, srcpath, outdir):
         ok = True
         for f in filename.parent.rglob('*'):
             if f.resolve() == filename:
+                continue
+            if f.relative_to(filename.parent).parts[0] == 'localdata':
+                # Data files which make() provides for the instrument:
                 continue
             if is_empty_dir(f):
                 print(f"   WARNING: Removing spurious empty directory {f.name}")

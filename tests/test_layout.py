@@ -38,6 +38,14 @@ def test_example_details():
     assert info["layout"] == "instrpy"
     assert info["mode_names"] == ["Long"]
     assert info["helper_modules"] == ["common", "geometry", "monitors"]
+    for example, prefix in [("ExInstrLocalFiles", ""),
+                            ("ExPyLocalFiles", "")]:
+        info = analyse_dir(EXAMPLES_DIR / example)
+        assert info["extra_files"] == {
+            "localcomps": ["ExCountMonitor.comp", "ex-count-lib.c",
+                           "ex-count-lib.h"],
+            "localdata": ["ExAlLike.ncmat"],
+        }
 
 
 def test_missing_condayml(copy_example):
@@ -78,7 +86,7 @@ def test_stray_file(copy_example):
     d = copy_example("ExInstrIncludes")
     (d / "instr" / "README.md").touch()
     fails(d, r"Unexpected file 'README.md'.*in addition to subdirs: "
-             r"includes snippets\.$")
+             r"includes snippets localcomps localdata\.$")
 
 
 def test_stray_file_instrpy_msg(copy_example):
@@ -87,7 +95,8 @@ def test_stray_file_instrpy_msg(copy_example):
     with pytest.raises(ValueError) as e:
         analyse_dir(d)
     assert "Unexpected file 'README.md'" in str(e.value)
-    assert str(e.value).endswith("in addition to subdirs: includes.")
+    assert str(e.value).endswith(
+        "in addition to subdirs: includes localcomps localdata.")
 
 
 def test_file_named_like_subdir(copy_example):
@@ -249,3 +258,57 @@ def test_instrpy_dir_ignored_entries(copy_example):
         (d / "instrpy" / name).mkdir()
     (d / "instrpy" / "pyproject.toml~").touch()
     analyse_dir(d)
+
+
+LOCALDIRS = [("ExInstrLocalFiles", ("instr",)),
+             ("ExPyLocalFiles", ("instrpy", "ExPyLocalFiles_instr"))]
+
+
+@pytest.mark.parametrize("example,basedir", LOCALDIRS)
+@pytest.mark.parametrize("fname", [
+    "Si.lau", "C60.hkl", "table.dat", "refl.ref", "source.mcpl.gz",
+    "geometry.off", "struct.cif",
+])
+def test_localdata_allowed(copy_example, example, basedir, fname):
+    d = copy_example(example)
+    (d.joinpath(*basedir) / "localdata" / fname).touch()
+    assert fname in analyse_dir(d)["extra_files"]["localdata"]
+
+
+@pytest.mark.parametrize("example,basedir", LOCALDIRS)
+@pytest.mark.parametrize("subdir,fname", [
+    ("localdata", "notes.md"),
+    ("localdata", "script.py"),
+    ("localdata", "other.instr"),
+    ("localdata", "Comp.comp"),
+    ("localcomps", "other.instr"),
+    ("localcomps", "helper.py"),
+    ("localcomps", "data.ncmat"),
+])
+def test_localfiles_not_allowed(copy_example, example, basedir, subdir, fname):
+    d = copy_example(example)
+    (d.joinpath(*basedir) / subdir / fname).touch()
+    fails(d, f"File {fname} not allowed")
+
+
+@pytest.mark.parametrize("example,basedir", LOCALDIRS)
+@pytest.mark.parametrize("subdir", ["localcomps", "localdata"])
+def test_localfiles_no_subdirs(copy_example, example, basedir, subdir):
+    d = copy_example(example)
+    (d.joinpath(*basedir) / subdir / "sub").mkdir()
+    fails(d, "Forbidden subdir")
+
+
+def test_local_component_shadowing(tmp_path):
+    from mcstas_ess_instr_citool.localfiles import check_local_components
+    resdir = tmp_path / "resources"
+    (resdir / "optics").mkdir(parents=True)
+    (resdir / "optics" / "Arm.comp").touch()
+    (resdir / "examples" / "Some").mkdir(parents=True)
+    (resdir / "examples" / "Some" / "ExampleOnly.comp").touch()
+    info = {"extra_files": {"localcomps": ["Arm.comp", "Mine.comp", "lib.c"]}}
+    with pytest.raises(RuntimeError, match="must not have the same names.*: Arm\\."):
+        check_local_components(info, resdir)
+    for comps in (["Mine.comp", "ExampleOnly.comp", "lib.c"], []):
+        check_local_components({"extra_files": {"localcomps": comps}}, resdir)
+    check_local_components({"extra_files": {}}, resdir)

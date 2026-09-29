@@ -1,0 +1,13 @@
+name: mcstas-environment
+
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - mcstas >= 3.8.8
+  - python>=3.12
+  - pip
+#  - pip:
+#    - tofneutron
+  - numpy >= 1.26

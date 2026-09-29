@@ -38,3 +38,20 @@ TODO items for mcstas-ess-instr-citool
   passes -y for such lines). Until a McStas release with this fix is
   required, such lines must list at least one parameter (as done by
   add_example in the ExPyHelpers example).
+
+* localdata/: Consider a size limit (or a policy for large files, e.g. Git
+  LFS) for data files. In the surveyed instrument repositories, the largest
+  data file is a 38 MB .hkl file (MAGiC).
+
+* mcstas-pygen drops SEARCH statements, so generatepy adds
+  instr.add_search() for localcomps/ itself. Consider proposing upstream that
+  mcstas-pygen translates SEARCH statements into instr.add_search() calls
+  (relative paths would need care, since McStasScript runs the instrument
+  elsewhere).
+
+* NCrystal resolves relative paths of data files (e.g.
+  "localdata/X.ncmat") only relative to the working directory, unlike McStas
+  components using read_table-lib, which also look relative to the .instr
+  file. Consider proposing upstream that the NCrystal McStas components also
+  look relative to the .instr file, so instruments can also be run from other
+  directories.

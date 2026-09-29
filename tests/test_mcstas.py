@@ -77,3 +77,12 @@ def test_runci_mpi(tmp_path):
     assert run_outputs
     for f in run_outputs:
         assert "running on 2 nodes" in f.read_text(errors="replace")
+
+
+@needs_mcstas
+def test_runci_rejects_shadowing_component(copy_example, tmp_path):
+    d = copy_example("ExInstrLocalFiles")
+    comps = d / "instr" / "localcomps"
+    (comps / "ExCountMonitor.comp").rename(comps / "Arm.comp")
+    with pytest.raises(RuntimeError, match="must not have the same names.*Arm"):
+        main(["-a", "runci", "-o", str(tmp_path / "out"), str(d)])

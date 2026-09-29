@@ -160,6 +160,25 @@ def test_add_includes_search_path():
                         __file__="/some dir/pkg/X_main.py"))
 
 
+def test_add_local_files_code():
+    from mcstas_ess_instr_citool.generatepy import add_local_files_code
+    fake = FAKE_PYGEN_OUTPUT.replace(
+        "    # MCSTAS system dir",
+        "    instr.set_dependency('')\n\n    # MCSTAS system dir")
+    assert add_local_files_code(fake, False, False) == fake
+    code = add_local_files_code(fake, localcomps=True, localdata=True)
+    assert "import argparse\nimport shutil\nimport pathlib\n" in code
+    lines = code.splitlines()
+    dep = lines.index("    instr.set_dependency('')")
+    assert lines[dep + 1].startswith("    # Let McStas(Script) find")
+    assert "instr.add_search(" in code
+    assert "shutil.copytree(_localdata_src, _localdata_dest" in code
+    # Also after the includes/ code:
+    code2 = add_local_files_code(add_includes_search_path(fake), True, False)
+    assert code2.index("_package_dir = ") < code2.index("instr.add_search(")
+    assert code2.count("import pathlib") == 1
+
+
 def test_postprocess_bad_pygen_output():
     with pytest.raises(RuntimeError, match="Could not find instrument"):
         postprocess_pygen_output("def make():\n    pass\n", "X_main", "")
@@ -171,7 +190,8 @@ def test_generatepy_requires_outdir(capsys):
     assert "--outdir is required" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("example", ["ExPyGenerated", "ExPyHelpers"])
+@pytest.mark.parametrize("example", ["ExPyGenerated", "ExPyHelpers",
+                                     "ExPyLocalFiles"])
 def test_generatepy_from_instrpy(example, tmp_path):
     outdir = tmp_path / "out"
     main(["-a", "generatepy", "-o", str(outdir),
@@ -203,7 +223,8 @@ def test_instrpy_no_snippets(copy_example):
 
 
 @needs_mcstas
-@pytest.mark.parametrize("example", ["ExInstrBasic", "ExInstrIncludes"])
+@pytest.mark.parametrize("example", ["ExInstrBasic", "ExInstrIncludes",
+                                     "ExInstrLocalFiles"])
 def test_generatepy_from_instr(example, tmp_path):
     outdir = tmp_path / "out"
     main(["-a", "generatepy", "-o", str(outdir), str(EXAMPLES_DIR / example)])
@@ -225,6 +246,22 @@ def test_generatepy_from_instr(example, tmp_path):
         for f in gendir.rglob("*.instr"):
             pkgdir = (outdir / "instrpy" / "ExInstrIncludes_instr").resolve()
             assert f"-I{pkgdir.as_posix()}" in f.read_text()
+    if example == "ExInstrLocalFiles":
+        assert info["extra_files"] == orig_info["extra_files"]
+        code = open(info["setups"]["MAIN"]).read()
+        assert "instr.add_search(" in code
+        assert "shutil.copytree(_localdata_src" in code
+        # The localcomps/ and localdata/ are not copied by generate, but the
+        # generated .instr refers to localcomps/ in the package, and make()
+        # copies localdata/ next to the generated .instr:
+        gendir = tmp_path / "gen"
+        main(["-a", "generate", "-o", str(gendir), str(outdir)])
+        assert not list(gendir.rglob("localcomps"))
+        (instrfile,) = gendir.rglob("*.instr")
+        pkgdir = (outdir / "instrpy" / "ExInstrLocalFiles_instr").resolve()
+        assert f'SEARCH "{(pkgdir / "localcomps").as_posix()}"' in (
+            instrfile.read_text())
+        assert (instrfile.parent / "localdata" / "ExAlLike.ncmat").is_file()
     for mode, path in info["setups"].items():
         code = open(path).read()
         name = f"{example}_{'main' if mode == 'MAIN' else 'mode' + mode}"
@@ -237,8 +274,10 @@ def test_generatepy_from_instr(example, tmp_path):
     assert_same_dirs(outdir, outdir2)
 
 @needs_mcstas
-def test_generatepy_roundtrip_runci(tmp_path):
-    # ExInstrIncludes is the most complicated example (includes/ and snippets/):
+@pytest.mark.parametrize("example", ["ExInstrIncludes", "ExInstrLocalFiles"])
+def test_generatepy_roundtrip_runci(example, tmp_path):
+    # ExInstrIncludes uses includes/ and snippets/, and ExInstrLocalFiles
+    # uses localcomps/ and localdata/:
     pydir = tmp_path / "py"
-    main(["-a", "generatepy", "-o", str(pydir), str(EXAMPLES_DIR / "ExInstrIncludes")])
+    main(["-a", "generatepy", "-o", str(pydir), str(EXAMPLES_DIR / example)])
     main(["-a", "runci", "-o", str(tmp_path / "ci"), str(pydir)])

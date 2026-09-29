@@ -1,0 +1,18 @@
+NCMAT v7
+# Example material for the mcstas-ess-instr-citool examples: an fcc
+# aluminium-like crystal (lattice constant 4.05 Aa), with a Debye model for
+# the atomic vibrations.
+@CELL
+  cubic 4.05
+@SPACEGROUP
+  225
+@ATOMPOSITIONS
+  Al 0 1/2 1/2
+  Al 0 0 0
+  Al 1/2 1/2 0
+  Al 1/2 0 1/2
+@DYNINFO
+  element  Al
+  fraction 1
+  type     vdosdebye
+  debye_temp 410.4

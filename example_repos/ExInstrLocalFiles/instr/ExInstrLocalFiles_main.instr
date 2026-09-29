@@ -1,0 +1,59 @@
+/*******************************************************************************
+* Instrument: ExInstrLocalFiles_main
+*
+* %I
+* Written by: mcstas-ess-instr-citool examples
+* Origin: ESS
+*
+* Example of an instrument using a project-specific component and data file.
+*
+* %D
+* A simple source illuminates a small powder sample, described by the NCrystal
+* material file localdata/ExAlLike.ncmat (an aluminium-like crystal). The
+* transmitted beam is measured by the project-specific component
+* ExCountMonitor (in localcomps/, together with the C library it uses).
+*
+* Local components are found via the SEARCH statement in the TRACE section,
+* and local data files are referred to as "localdata/<file>", relative to the
+* directory in which the instrument runs (i.e. this directory).
+*
+* %Example: temperature=300 Detector: counter_I=4.69e5
+* %Example: temperature=600 Detector: counter_I=4.66e5
+*
+* %P
+* temperature: [K] Temperature of the sample
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT ExInstrLocalFiles_main(temperature=300)
+
+DECLARE
+%{
+  char sample_cfg[256];
+%}
+
+INITIALIZE
+%{
+  snprintf(sample_cfg, sizeof(sample_cfg),
+           "localdata/ExAlLike.ncmat;temp=%gK", temperature);
+%}
+
+TRACE
+
+SEARCH "localcomps"
+
+COMPONENT origin = Progress_bar()
+AT (0, 0, 0) ABSOLUTE
+
+COMPONENT source = Source_simple(radius=0.01, dist=5, focus_xw=0.01,
+  focus_yh=0.01, lambda0=4, dlambda=2, flux=1e10)
+AT (0, 0, 0) RELATIVE origin
+
+COMPONENT sample = NCrystal_sample(cfg=sample_cfg, radius=0.005, yheight=0.01)
+AT (0, 0, 5) RELATIVE source
+
+COMPONENT counter = ExCountMonitor(xwidth=0.02, yheight=0.02,
+  filename="counter", restore_neutron=1)
+AT (0, 0, 1) RELATIVE sample
+
+END

@@ -1,0 +1,60 @@
+/*******************************************************************************
+* Component: ExCountMonitor
+*
+* %I
+* Written by: mcstas-ess-instr-citool examples
+* Origin: ESS
+*
+* Example of a project-specific component: counts the intensity of neutrons
+* hitting a rectangle, using a function from its own C library.
+*
+* %P
+* xwidth:   [m]  Width of the counting area
+* yheight:  [m]  Height of the counting area
+* filename: [str] Name of the output file
+* restore_neutron: [1] If set, the neutron is not absorbed
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT ExCountMonitor
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, string filename=0, int restore_neutron=0)
+SHARE
+%{
+%include "ex-count-lib"
+%}
+DECLARE
+%{
+  double Nsum;
+  double psum;
+  double p2sum;
+%}
+INITIALIZE
+%{
+  Nsum = 0; psum = 0; p2sum = 0;
+%}
+TRACE
+%{
+  PROP_Z0;
+  if (ex_in_rectangle(x, y, xwidth, yheight)) {
+    double p2 = p*p;
+    #pragma acc atomic
+    Nsum = Nsum + 1;
+    #pragma acc atomic
+    psum = psum + p;
+    #pragma acc atomic
+    p2sum = p2sum + p2;
+    SCATTER;
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
+%}
+SAVE
+%{
+  DETECTOR_OUT_0D("Example count monitor", Nsum, psum, p2sum);
+%}
+MCDISPLAY
+%{
+  rectangle("xy", 0, 0, 0, xwidth, yheight);
+%}
+END

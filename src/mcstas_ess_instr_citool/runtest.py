@@ -18,7 +18,9 @@ def mctest_args( instrdir, testdir, mpi = None ):
 def runtest( info, outdir, mpi = None ):
     from .util import mcstas_info
     from .generate import generate
+    from .localfiles import check_local_components
     mctest_cmd = mcstas_info()['cmd']['mctest']
+    check_local_components( info )
     instrdir = generate( info, outdir )
     testdir = outdir.joinpath('tests').absolute().resolve()
     cmd = mctest_args( instrdir, testdir, mpi )

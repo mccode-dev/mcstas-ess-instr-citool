@@ -51,7 +51,8 @@ def test_outdir_must_be_empty(tmp_path, capsys):
     assert "is not empty" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("example", ["ExInstrBasic", "ExInstrIncludes"])
+@pytest.mark.parametrize("example", ["ExInstrBasic", "ExInstrIncludes",
+                                     "ExInstrLocalFiles"])
 def test_generate_instr(example, tmp_path):
     outdir = tmp_path / "out"
     main(["-a", "generate", "-o", str(outdir), str(EXAMPLES_DIR / example)])
