@@ -55,3 +55,10 @@ TODO items for mcstas-ess-instr-citool
   file. Consider proposing upstream that the NCrystal McStas components also
   look relative to the .instr file, so instruments can also be run from other
   directories.
+
+* Components which read data files by fixed file names, like the McStas
+  3.8.8 Union_abs_logger_nD_scintillator.comp (used by SKADI), which reads
+  *_pixel_hit_efficiency*.txt tables, do not find them in localdata/ (McStas
+  looks in the working directory, next to the .instr file and in the McStas
+  data directories). Propose upstream that such components get a parameter
+  for the location of the files.
