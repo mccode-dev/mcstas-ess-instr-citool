@@ -228,3 +228,24 @@ def test_instrument_name_snippets_not_checked():
     # The snippet in ESS03 defines instrument "ESS03", which is fine:
     info = analyse_dir(EXAMPLES_DIR / "ESS03")
     assert info["extra_files"]["snippets"] == ["ESS03.instr"]
+
+
+@pytest.mark.parametrize("entry,is_dir", [
+    ("README.md", False),
+    ("tests", True),
+    ("setup.py", False),
+])
+def test_instrpy_dir_strict(copy_example, entry, is_dir):
+    d = copy_example("ESS04")
+    p = d / "instrpy" / entry
+    p.mkdir() if is_dir else p.touch()
+    fails(d, f"Unexpected file or directory '{entry}'.*Only pyproject.toml"
+             " and ESS04_instr/ are allowed")
+
+
+def test_instrpy_dir_ignored_entries(copy_example):
+    d = copy_example("ESS04")
+    for name in ["__pycache__", "ESS04.egg-info", ".hidden"]:
+        (d / "instrpy" / name).mkdir()
+    (d / "instrpy" / "pyproject.toml~").touch()
+    analyse_dir(d)

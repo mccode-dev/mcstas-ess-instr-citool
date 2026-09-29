@@ -33,6 +33,8 @@ def enforce_instr_layout(project_dir: str) -> Dict:
 
     2) project_dir/instrpy/
        - must contain instrpy/pyproject.toml (PEP 621 only; [project].name required)
+       - nothing else than pyproject.toml and PROJECTNAME_instr/ is allowed
+         (except for __pycache__/ and *.egg-info/ created by python tools)
        - must contain a subdir instrpy/PROJECTNAME_instr/
          - empty __init__.py (size == 0)
          - exactly one PROJECT_main.py
@@ -301,6 +303,17 @@ def enforce_instr_layout(project_dir: str) -> Dict:
         )
 
     project_name_from_subdir, subdir_name = candidates[0]
+
+    # Nothing else is allowed in instrpy/, except for files and directories
+    # created by python tools (like "pip install -e"):
+    for entry in sorted(os.listdir(instrpy_dir)):
+        if ( _is_ignored(entry) or entry == "__pycache__"
+             or entry.endswith(".egg-info") ):
+            continue
+        if entry not in ("pyproject.toml", subdir_name):
+            raise ValueError(
+                f"Unexpected file or directory '{entry}' in '{instrpy_dir}'."
+                f" Only pyproject.toml and {subdir_name}/ are allowed.")
     instrpy_subdir = os.path.join(instrpy_dir, subdir_name)
 
     init_path = os.path.join(instrpy_subdir, "__init__.py")

@@ -32,6 +32,8 @@ An instrument project is a directory containing:
   * `instrpy/`: McStasScript python files:
     * An `instrpy/pyproject.toml` with a PEP 621 `[project]` table whose
       `name` matches `PROJECT`.
+    * Nothing else is allowed directly in `instrpy/`, except for
+      `__pycache__/` and `*.egg-info/` directories created by python tools.
     * An `instrpy/PROJECT_instr/` python package with an empty `__init__.py`,
       exactly one `PROJECT_main.py`, and zero or more
       `PROJECT_modeMODENAME.py`. Each of these must provide a `make()`
