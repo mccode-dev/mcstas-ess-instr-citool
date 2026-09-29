@@ -144,7 +144,6 @@ def _add_tests( code, examples ):
     newer versions of mcstas-pygen do it (except that problems are errors
     rather than warnings)."""
     partypes = dict((n, t) for t, n in _PARAM_RE.findall(code))
-    allpars = []
     testcode = []
     for parvals, monitor, value in examples:
         monitor = monitor.strip()
@@ -183,8 +182,6 @@ def _add_tests( code, examples ):
                 raise RuntimeError(f'Parameter "{parname}" of unsupported'
                                    ' type in %Example line')
             inclpars.append(f"'{parname}'")
-            if parname not in allpars:
-                allpars.append(parname)
         if setpars:
             testcode.append(f"    instr.set_parameters({{{', '.join(setpars)}}})\n")
         testcode.append(f"    instr.add_test('{monitor}', intensity={value},"
@@ -192,15 +189,11 @@ def _add_tests( code, examples ):
 
     block = [ "    # Tests corresponding to the %Example lines of the instrument. The\n",
               "    # parameter values are restored afterwards, since add_test uses the\n",
-              "    # current parameter values:\n" ]
-    if allpars:
-        plist = ', '.join(f"'{p}'" for p in allpars)
-        block.append("    _parameter_values = {p: instr.parameters[p].value"
-                     f" for p in [{plist}]}}\n")
+              "    # current parameter values:\n",
+              "    _parameter_values = {p: instr.parameters[p].value"
+              " for p in instr.get_parameter_names()}\n" ]
     block += testcode
-    if allpars:
-        block.append("    instr.set_parameters(_parameter_values)\n")
-    block.append("\n")
+    block += [ "    instr.set_parameters(_parameter_values)\n", "\n" ]
 
     anchor = _TESTS_ANCHOR if _TESTS_ANCHOR in code else "    return instr\n"
     if code.count(anchor) != 1:

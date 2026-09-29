@@ -54,7 +54,7 @@ EXPECTED_TESTS = """\
     # Tests corresponding to the %Example lines of the instrument. The
     # parameter values are restored afterwards, since add_test uses the
     # current parameter values:
-    _parameter_values = {p: instr.parameters[p].value for p in ['sector', 'lambda', 'n']}
+    _parameter_values = {p: instr.parameters[p].value for p in instr.get_parameter_names()}
     instr.set_parameters({'sector': 'N', 'lambda': 2.5, 'n': 3})
     instr.add_test('mon', intensity=1.5e+11, included_pars=['sector', 'lambda', 'n'])
     instr.add_test('mon', intensity=12, included_pars=[])
