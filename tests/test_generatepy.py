@@ -130,7 +130,10 @@ def test_add_includes_search_path():
     assert "instr.add_dependency('-I' + _package_dir)" in code
     # The code works with and without McStasScript support for
     # add_dependency:
-    ns = {"__file__": "/some/pkg/X_main.py", "pathlib": __import__("pathlib")}
+    import pathlib
+    ns = {"__file__": "/some/pkg/X_main.py", "pathlib": pathlib}
+    # (On Windows, the resolved path gets a drive letter):
+    pkgdir = pathlib.Path("/some/pkg/X_main.py").resolve().parent.as_posix()
     body = code[code.index("    _package_dir ="):code.index("    # MCSTAS system")]
     body = "\n".join(line[4:] for line in body.splitlines())
 
@@ -144,14 +147,14 @@ def test_add_includes_search_path():
         def add_dependency(self, string):
             self.added = string
 
-    for cls, expected in [(OldInstr, '"@NCRYSTALFLAGS@ -I/some/pkg"'),
+    for cls, expected in [(OldInstr, f'"@NCRYSTALFLAGS@ -I{pkgdir}"'),
                           (NewInstr, '" @NCRYSTALFLAGS@"')]:
         instr = cls()
         exec(body, dict(ns, instr=instr))
         assert instr.dependency_statement == expected
     instr = NewInstr()
     exec(body, dict(ns, instr=instr))
-    assert instr.added == "-I/some/pkg"
+    assert instr.added == f"-I{pkgdir}"
     with pytest.raises(RuntimeError, match="must not contain spaces"):
         exec(body, dict(ns, instr=OldInstr(),
                         __file__="/some dir/pkg/X_main.py"))
