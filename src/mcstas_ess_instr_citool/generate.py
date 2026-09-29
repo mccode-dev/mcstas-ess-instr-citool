@@ -27,7 +27,13 @@ def generate( info, outdir, pygen_timeout = DEFAULT_PYGEN_TIMEOUT ):
         d.mkdir()
         os.chdir(d)
         genfct( k, P(v), d )
-        for subdirname, fns in sorted(info["extra_files"].items()):
+        # For the instr layout, the extra files (includes/ and snippets/) are
+        # needed next to the .instr files. For the instrpy layout, the
+        # instruments must themselves make the C compiler find the files in
+        # includes/ in the python package (e.g. via their DEPENDENCY line),
+        # since that is also needed when using them directly:
+        extra_files = info["extra_files"] if info["layout"] == "instr" else {}
+        for subdirname, fns in sorted(extra_files.items()):
             sd = d.joinpath(subdirname)
             sd_src = P(v).parent.joinpath(subdirname)
             assert sd_src.is_dir()

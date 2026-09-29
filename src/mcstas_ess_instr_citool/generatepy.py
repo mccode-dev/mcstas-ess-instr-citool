@@ -91,6 +91,8 @@ def _generate_from_instr( info, outdir ):
                                    + p.stdout + p.stderr)
             code = pyfile.read_text()
         code = postprocess_pygen_output( code, path.stem, path.read_text() )
+        if 'includes' in info['extra_files']:
+            code = add_includes_search_path( code )
         (pkgdir / f'{path.stem}.py').write_text(code)
 
     # The includes/ files are needed by the generated code, while the
@@ -138,6 +140,40 @@ def postprocess_pygen_output( code, name, instr_text ):
         elif re.match(r'^ *# \w+ system dir is ', line):
             continue
         lines.append(line)
+    return ''.join(lines)
+
+
+_INCLUDES_CODE = """\
+    # Let the C compiler find the files in includes/ in this python package
+    # (the path must not contain spaces, since it is put in the DEPENDENCY line):
+    _package_dir = pathlib.Path(__file__).resolve().parent.as_posix()
+    if ' ' in _package_dir:
+        raise RuntimeError('The path of the instrument package must not'
+                           ' contain spaces: ' + _package_dir)
+    if hasattr(instr, 'add_dependency'):
+        instr.add_dependency('-I' + _package_dir)
+    else:
+        # McStasScript without add_dependency (0.0.93 and earlier):
+        instr.set_dependency((instr.dependency_statement.strip('"')
+                              + ' -I' + _package_dir).strip())
+"""
+
+
+def add_includes_search_path( code ):
+    """Add code to generated instrument code, which adds the directory of the
+    python package to the search path of the C compiler (via the DEPENDENCY
+    line), so #include "includes/..." works wherever the instrument is
+    written and compiled by McStasScript."""
+    if code.count('import argparse\n') != 1:
+        raise RuntimeError('Could not find imports in output of mcstas-pygen')
+    code = code.replace('import argparse\n', 'import argparse\nimport pathlib\n')
+    lines = code.splitlines(keepends=True)
+    idx = [i for i, line in enumerate(lines)
+           if line.startswith('    instr.set_dependency(')]
+    if len(idx) != 1:
+        raise RuntimeError('Could not find the DEPENDENCY line in output of'
+                           ' mcstas-pygen')
+    lines.insert(idx[0] + 1, _INCLUDES_CODE)
     return ''.join(lines)
 
 

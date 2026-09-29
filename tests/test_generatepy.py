@@ -4,7 +4,8 @@ import pytest
 
 from mcstas_ess_instr_citool.analyse import analyse_dir
 from mcstas_ess_instr_citool.cli import main
-from mcstas_ess_instr_citool.generatepy import (generatepy,
+from mcstas_ess_instr_citool.generatepy import (add_includes_search_path,
+                                                generatepy,
                                                 postprocess_pygen_output)
 from conftest import EXAMPLES_DIR
 
@@ -120,6 +121,42 @@ def test_postprocess_bad_examples(example, match):
                                  f"%Example: {example}\n")
 
 
+def test_add_includes_search_path():
+    fake = FAKE_PYGEN_OUTPUT.replace(
+        "    # MCSTAS system dir",
+        "    instr.set_dependency(' @NCRYSTALFLAGS@')\n    # MCSTAS system dir")
+    code = add_includes_search_path(fake)
+    assert "import argparse\nimport pathlib\n" in code
+    assert "instr.add_dependency('-I' + _package_dir)" in code
+    # The code works with and without McStasScript support for
+    # add_dependency:
+    ns = {"__file__": "/some/pkg/X_main.py", "pathlib": __import__("pathlib")}
+    body = code[code.index("    _package_dir ="):code.index("    # MCSTAS system")]
+    body = "\n".join(line[4:] for line in body.splitlines())
+
+    class OldInstr:
+        dependency_statement = '" @NCRYSTALFLAGS@"'
+
+        def set_dependency(self, string):
+            self.dependency_statement = '"' + string + '"'
+
+    class NewInstr(OldInstr):
+        def add_dependency(self, string):
+            self.added = string
+
+    for cls, expected in [(OldInstr, '"@NCRYSTALFLAGS@ -I/some/pkg"'),
+                          (NewInstr, '" @NCRYSTALFLAGS@"')]:
+        instr = cls()
+        exec(body, dict(ns, instr=instr))
+        assert instr.dependency_statement == expected
+    instr = NewInstr()
+    exec(body, dict(ns, instr=instr))
+    assert instr.added == "-I/some/pkg"
+    with pytest.raises(RuntimeError, match="must not contain spaces"):
+        exec(body, dict(ns, instr=OldInstr(),
+                        __file__="/some dir/pkg/X_main.py"))
+
+
 def test_postprocess_bad_pygen_output():
     with pytest.raises(RuntimeError, match="Could not find instrument"):
         postprocess_pygen_output("def make():\n    pass\n", "X_main", "")
@@ -177,6 +214,14 @@ def test_generatepy_from_instr(example, tmp_path):
     if example == "ESS03":
         assert info["extra_files"] == {
             "includes": orig_info["extra_files"]["includes"]}
+        # The includes/ are not copied by generate, but found via the
+        # DEPENDENCY line:
+        gendir = tmp_path / "gen"
+        main(["-a", "generate", "-o", str(gendir), str(outdir)])
+        assert not list(gendir.rglob("includes"))
+        for f in gendir.rglob("*.instr"):
+            pkgdir = (outdir / "instrpy" / "ESS03_instr").resolve()
+            assert f"-I{pkgdir.as_posix()}" in f.read_text()
     for mode, path in info["setups"].items():
         code = open(path).read()
         name = f"{example}_{'main' if mode == 'MAIN' else 'mode' + mode}"
