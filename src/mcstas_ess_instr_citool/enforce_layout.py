@@ -113,7 +113,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                     raise ValueError(f'Directory {dirname} not allowed in'
                                      f' {base_dir}. Only allowed subdirs'
                                      f' are: {allowed_subdirs_str or "<none>"}')
-                for fextra in sorted(fabs.iterdir()):
+                for fextra in sorted(fabs.iterdir(), key=lambda f: f.name):
                     if _is_ignored(fextra.name):
                         continue
                     if fextra.is_dir():
