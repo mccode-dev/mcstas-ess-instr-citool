@@ -1,4 +1,4 @@
-"""Construction of the ESS04 instrument, shared by all modes."""
+"""Construction of the ExPyHelpers instrument, shared by all modes."""
 
 import mcstasscript as ms
 
@@ -7,7 +7,7 @@ from .monitors import add_monitor_set
 
 
 def build(name, guide_length, input_path=None):
-    """Build the ESS04 instrument: a simple source, a straight guide of the
+    """Build the ExPyHelpers instrument: a simple source, a straight guide of the
     given length, and monitors at the guide entrance and at the sample
     position."""
     instr = ms.McStas_instr(name, author="ESS DMSC", origin="ESS DMSC",

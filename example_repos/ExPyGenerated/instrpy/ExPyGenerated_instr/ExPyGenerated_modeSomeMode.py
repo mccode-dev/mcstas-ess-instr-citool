@@ -2,26 +2,26 @@
 # Automatically generated file. 
 # Format:    Python script code
 # McStas <http://www.mcstas.org>
-# Instrument: ESS02_modeSomeMode.instr (ESS02_modeSomeMode)
-# File:       ESS02_modeSomeMode.py
+# Instrument: ExPyGenerated_modeSomeMode.instr (ExPyGenerated_modeSomeMode)
+# File:       ExPyGenerated_modeSomeMode.py
 
 import mcstasscript as ms
 import argparse
 
 # Python McStas instrument description
 def make(input_path=None):
-    instr = ms.McStas_instr("ESS02_modeSomeMode", author = "McCode Py-Generator", origin = "ESS DMSC", input_path=input_path)
+    instr = ms.McStas_instr("ExPyGenerated_modeSomeMode", author = "McCode Py-Generator", origin = "ESS DMSC", input_path=input_path)
     
 # Add collected DEPENDENCY strings
     instr.set_dependency('')
 
     # *****************************************************************************
-    # * Start of instrument 'ESS02_modeSomeMode' generated code
+    # * Start of instrument 'ExPyGenerated_modeSomeMode' generated code
     # *****************************************************************************
 
 
     # *****************************************************************************
-    # * instrument 'ESS02_modeSomeMode' and components DECLARE
+    # * instrument 'ExPyGenerated_modeSomeMode' and components DECLARE
     # *****************************************************************************
 
     # Instrument parameters:
@@ -132,7 +132,7 @@ def make(input_path=None):
     uv_T0 = instr.add_user_var("double ", "T0", comment="USERVAR added by McCode py-generator")
     uv_L0 = instr.add_user_var("double ", "L0", comment="USERVAR added by McCode py-generator")
     # *****************************************************************************
-    # * instrument 'ESS02_modeSomeMode' TRACE
+    # * instrument 'ExPyGenerated_modeSomeMode' TRACE
     # *****************************************************************************
     
     # Comp instance Origin, placement and parameters
@@ -1591,4 +1591,4 @@ if __name__ == '__main__':
     #data = sim_widget.get_data()
 
 
-# end of generated Python code ESS02_modeSomeMode.py
+# end of generated Python code ExPyGenerated_modeSomeMode.py

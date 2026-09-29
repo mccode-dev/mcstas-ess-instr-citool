@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: ESS03_main
+* Instrument: ExInstrIncludes_main
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
@@ -41,7 +41,7 @@
 * %E
 *******************************************************************************/
 
-DEFINE INSTRUMENT ESS03_main(int sample = 1)
+DEFINE INSTRUMENT ExInstrIncludes_main(int sample = 1)
 
 DECLARE %{
 #include "includes/instr_declare.h"
@@ -53,7 +53,7 @@ INITIALIZE %{
 
 TRACE
 
-%include "snippets/ESS03.instr"
+%include "snippets/ExInstrIncludes.instr"
 
 
 COMPONENT Origin = Progress_bar()

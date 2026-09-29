@@ -32,4 +32,4 @@ TODO items for mcstas-ess-instr-citool
   has been proposed in https://github.com/mccode-dev/McCode/pull/2708 (which
   passes -y for such lines). Until a McStas release with this fix is
   required, such lines must list at least one parameter (as done by
-  add_example in the ESS04 example).
+  add_example in the ExPyHelpers example).

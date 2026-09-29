@@ -25,20 +25,20 @@ def test_mcstas_version():
 def test_generate_instrpy(tmp_path, monkeypatch):
     pytest.importorskip("mcstasscript")
     monkeypatch.chdir(tmp_path)  # generate() changes the working directory
-    info = analyse_dir(EXAMPLES_DIR / "ESS02")
+    info = analyse_dir(EXAMPLES_DIR / "ExPyGenerated")
     instrdir = generate(info, tmp_path)
     files = sorted(p.relative_to(instrdir).as_posix()
                    for p in instrdir.rglob("*") if p.is_file())
-    assert files == ["MAIN/ESS02_main.instr",
-                     "SomeMode/ESS02_modeSomeMode.instr"]
+    assert files == ["MAIN/ExPyGenerated_main.instr",
+                     "SomeMode/ExPyGenerated_modeSomeMode.instr"]
     assert "%Example:" in (instrdir / files[0]).read_text()
 
 
 def test_generate_instrpy_timeout(tmp_path, copy_example, monkeypatch):
     pytest.importorskip("mcstasscript")
     monkeypatch.chdir(tmp_path)
-    d = copy_example("ESS02")
-    f = d / "instrpy" / "ESS02_instr" / "ESS02_main.py"
+    d = copy_example("ExPyGenerated")
+    f = d / "instrpy" / "ExPyGenerated_instr" / "ExPyGenerated_main.py"
     f.write_text(f.read_text().replace(
         "def make(input_path=None):\n",
         "def make(input_path=None):\n    import time; time.sleep(60)\n"))

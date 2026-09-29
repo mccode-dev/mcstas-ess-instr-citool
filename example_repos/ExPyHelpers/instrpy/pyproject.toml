@@ -3,11 +3,11 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ESS04"
+name = "ExPyHelpers"
 version = "0.0.0"
 description = "Simple McStasScript instrument with shared helper modules"
 requires-python = ">=3.11"
 dependencies = []
 
 [tool.setuptools]
-packages = ["ESS04_instr"]
+packages = ["ExPyHelpers_instr"]

@@ -167,11 +167,11 @@ def test_postprocess_bad_pygen_output():
 
 def test_generatepy_requires_outdir(capsys):
     with pytest.raises(SystemExit):
-        main(["-a", "generatepy", str(EXAMPLES_DIR / "ESS01")])
+        main(["-a", "generatepy", str(EXAMPLES_DIR / "ExInstrBasic")])
     assert "--outdir is required" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("example", ["ESS02", "ESS04"])
+@pytest.mark.parametrize("example", ["ExPyGenerated", "ExPyHelpers"])
 def test_generatepy_from_instrpy(example, tmp_path):
     outdir = tmp_path / "out"
     main(["-a", "generatepy", "-o", str(outdir),
@@ -183,8 +183,8 @@ def test_generatepy_from_instrpy(example, tmp_path):
 
 
 def test_instrpy_with_includes(copy_example):
-    d = copy_example("ESS02")
-    inc = d / "instrpy" / "ESS02_instr" / "includes"
+    d = copy_example("ExPyGenerated")
+    inc = d / "instrpy" / "ExPyGenerated_instr" / "includes"
     inc.mkdir()
     (inc / "foo.h").touch()
     (inc / "foo.c").touch()
@@ -196,14 +196,14 @@ def test_instrpy_with_includes(copy_example):
 
 
 def test_instrpy_no_snippets(copy_example):
-    d = copy_example("ESS02")
-    (d / "instrpy" / "ESS02_instr" / "snippets").mkdir()
+    d = copy_example("ExPyGenerated")
+    (d / "instrpy" / "ExPyGenerated_instr" / "snippets").mkdir()
     with pytest.raises(ValueError, match="Directory snippets not allowed"):
         analyse_dir(d)
 
 
 @needs_mcstas
-@pytest.mark.parametrize("example", ["ESS01", "ESS03"])
+@pytest.mark.parametrize("example", ["ExInstrBasic", "ExInstrIncludes"])
 def test_generatepy_from_instr(example, tmp_path):
     outdir = tmp_path / "out"
     main(["-a", "generatepy", "-o", str(outdir), str(EXAMPLES_DIR / example)])
@@ -214,7 +214,7 @@ def test_generatepy_from_instr(example, tmp_path):
     assert list(info["setups"]) == list(orig_info["setups"])
     assert (outdir / "conda.yml").read_text() == (
         EXAMPLES_DIR / example / "conda.yml").read_text()
-    if example == "ESS03":
+    if example == "ExInstrIncludes":
         assert info["extra_files"] == {
             "includes": orig_info["extra_files"]["includes"]}
         # The includes/ are not copied by generate, but found via the
@@ -223,7 +223,7 @@ def test_generatepy_from_instr(example, tmp_path):
         main(["-a", "generate", "-o", str(gendir), str(outdir)])
         assert not list(gendir.rglob("includes"))
         for f in gendir.rglob("*.instr"):
-            pkgdir = (outdir / "instrpy" / "ESS03_instr").resolve()
+            pkgdir = (outdir / "instrpy" / "ExInstrIncludes_instr").resolve()
             assert f"-I{pkgdir.as_posix()}" in f.read_text()
     for mode, path in info["setups"].items():
         code = open(path).read()
@@ -238,7 +238,7 @@ def test_generatepy_from_instr(example, tmp_path):
 
 @needs_mcstas
 def test_generatepy_roundtrip_runci(tmp_path):
-    # ESS03 is the most complicated example (includes/ and snippets/):
+    # ExInstrIncludes is the most complicated example (includes/ and snippets/):
     pydir = tmp_path / "py"
-    main(["-a", "generatepy", "-o", str(pydir), str(EXAMPLES_DIR / "ESS03")])
+    main(["-a", "generatepy", "-o", str(pydir), str(EXAMPLES_DIR / "ExInstrIncludes")])
     main(["-a", "runci", "-o", str(tmp_path / "ci"), str(pydir)])

@@ -1,4 +1,4 @@
-"""Helpers for adding monitors to the ESS04 instrument."""
+"""Helpers for adding monitors to the ExPyHelpers instrument."""
 
 from .geometry import GUIDE_HEIGHT, GUIDE_WIDTH
 

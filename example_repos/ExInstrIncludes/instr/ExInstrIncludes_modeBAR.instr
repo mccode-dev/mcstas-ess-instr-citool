@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Instrument: ESS03_modeBAR
+* Instrument: ExInstrIncludes_modeBAR
 *
 * %I
 * Written by: Peter Willendrup <pkwi@fysik.dtu.dk>
@@ -41,7 +41,7 @@
 * %E
 *******************************************************************************/
 
-DEFINE INSTRUMENT ESS03_modeBAR(samplepos = 0.6)
+DEFINE INSTRUMENT ExInstrIncludes_modeBAR(samplepos = 0.6)
 
 DECLARE %{
 #include "includes/instr_declare.h"
@@ -53,7 +53,7 @@ INITIALIZE %{
 
 TRACE
 
-%include "snippets/ESS03.instr"
+%include "snippets/ExInstrIncludes.instr"
 
 
 COMPONENT Origin = Progress_bar()

@@ -1,4 +1,4 @@
-"""Dimensions of the ESS04 beamline (all lengths in meters)."""
+"""Dimensions of the ExPyHelpers beamline (all lengths in meters)."""
 
 # Source:
 SOURCE_RADIUS = 0.02

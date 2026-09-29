@@ -15,24 +15,24 @@ def test_list(example, capsys):
 
 
 def test_json(capsys):
-    main(["-a", "json", str(EXAMPLES_DIR / "ESS02")])
+    main(["-a", "json", str(EXAMPLES_DIR / "ExPyGenerated")])
     info = json.loads(capsys.readouterr().out)
-    assert info["project_name"] == "ESS02"
+    assert info["project_name"] == "ExPyGenerated"
     assert list(info["setups"]) == ["MAIN", "SomeMode"]
 
 
 def test_pprint(capsys):
-    main(["-a", "pprint", str(EXAMPLES_DIR / "ESS01")])
-    assert "'project_name': 'ESS01'" in capsys.readouterr().out
+    main(["-a", "pprint", str(EXAMPLES_DIR / "ExInstrBasic")])
+    assert "'project_name': 'ExInstrBasic'" in capsys.readouterr().out
 
 
 def test_check(capsys):
-    main(["-a", "check", str(EXAMPLES_DIR / "ESS03")])
+    main(["-a", "check", str(EXAMPLES_DIR / "ExInstrIncludes")])
     assert capsys.readouterr().out == "File and directory structure OK\n"
 
 
 def test_check_fails(copy_example):
-    d = copy_example("ESS01")
+    d = copy_example("ExInstrBasic")
     (d / "instr" / "junk.txt").touch()
     with pytest.raises(ValueError, match="Unexpected file 'junk.txt'"):
         main(["-a", "check", str(d)])
@@ -40,18 +40,18 @@ def test_check_fails(copy_example):
 
 def test_bad_action(capsys):
     with pytest.raises(SystemExit):
-        main(["-a", "nosuchaction", str(EXAMPLES_DIR / "ESS01")])
+        main(["-a", "nosuchaction", str(EXAMPLES_DIR / "ExInstrBasic")])
 
 
 def test_outdir_must_be_empty(tmp_path, capsys):
     (tmp_path / "somefile").touch()
     with pytest.raises(SystemExit):
         main(["-a", "generate", "-o", str(tmp_path),
-              str(EXAMPLES_DIR / "ESS01")])
+              str(EXAMPLES_DIR / "ExInstrBasic")])
     assert "is not empty" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("example", ["ESS01", "ESS03"])
+@pytest.mark.parametrize("example", ["ExInstrBasic", "ExInstrIncludes"])
 def test_generate_instr(example, tmp_path):
     outdir = tmp_path / "out"
     main(["-a", "generate", "-o", str(outdir), str(EXAMPLES_DIR / example)])
