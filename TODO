@@ -50,6 +50,10 @@ TODO items for mcstas-ess-instr-citool
   McStasScript PR which runs the command (as McStas does) and loads the
   components from the resulting directories. This is needed for the
   translation of SEARCH SHELL statements by mcstas-pygen (see next item).
+  Any file lookup added in that PR must follow the locations searched by
+  McStas's Open_File() (read_table-lib), which will no longer include $HOME
+  (see the NCrystal search path item below). McStasScript itself does not
+  currently search $HOME.
 
 * mcstas-pygen drops SEARCH statements, so generatepy adds
   instr.add_search() for localcomps/ itself. Consider proposing upstream that
@@ -65,6 +69,22 @@ TODO items for mcstas-ess-instr-citool
   the .instr file to the NCrystal search path if it has a localdata/
   subdirectory. Once released, update the README (instruments using
   NCrystal then also work when not run from their own directory).
+
+* NCrystal custom search directories (ncrystal_add_custom_search_dir, used
+  by mccode_setup_ncrystal_search_paths in McCode):
+  - Bug: NCrystal::DataSources::addCustomSearchDirectory asserts strictly
+    decreasing priorities after sorting, but the C API always uses the same
+    default priority, so adding two different directories violates the
+    assertion (harmless in normal builds, where it is compiled out).
+  - Custom directories have a lower priority than NCrystal's standard library,
+    so a local file with the same name as a standard library file (e.g.
+    Al_sg225.ncmat next to the .instr file) is shadowed by the standard
+    library version (unless it is in the working directory), unlike McStas's
+    Open_File(). Also, paths containing ".." are not accepted in custom
+    directories.
+  Perhaps an NCrystal JSON query could allow more flexible modifications,
+  including of priorities. To be determined later; the McCode side
+  (mccode_setup_ncrystal_search_paths) can then be updated accordingly.
 
 * Components which read data files by fixed file names, like the McStas
   3.8.8 Union_abs_logger_nD_scintillator.comp (used by SKADI), which reads
