@@ -69,8 +69,7 @@ An instrument project is a directory containing:
   `conda.yml`.
 * Optionally files named `README*`, `TODO*`, `LICENSE*` and `CHANGELOG*`.
 * Nothing else, apart from hidden files and directories (names starting with
-  `.`, e.g. `.gitignore` and `.gitlab-ci.yml`), and the local directories
-  `venv/` and `__pycache__/`, which should be listed in `.gitignore`.
+  `.`, e.g. `.gitignore` and `.gitlab-ci.yml`).
 
 ### Tests in extra_pytests/
 

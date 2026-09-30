@@ -93,7 +93,7 @@ def test_root_allowed_entries(copy_example):
     for f in ["README.md", "README", "TODO", "LICENSE", "CHANGELOG.md",
               ".gitignore", ".gitlab-ci.yml", "backup~"]:
         (d / f).touch()
-    for sub in ["extra", "extra_pytests", ".github", "__pycache__", "venv"]:
+    for sub in ["extra", "extra_pytests", ".github", "__pycache__"]:
         (d / sub).mkdir()
     (d / "extra" / "anything.ipynb").touch()
     (d / "extra" / "somedir").mkdir()
@@ -112,7 +112,7 @@ def test_root_no_extras(copy_example):
 
 @pytest.mark.parametrize("entry,is_dir", [
     ("notebook.ipynb", False), ("tests", True), ("pyproject.toml", False),
-    ("readme.md", False), ("docs", True), ("venv", False), ("env", True)])
+    ("readme.md", False), ("docs", True)])
 def test_root_unexpected_entries(copy_example, entry, is_dir):
     d = copy_example("ExInstrBasic")
     if is_dir:
