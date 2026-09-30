@@ -235,6 +235,41 @@ failing with an error message on any violation. Available actions:
 If `-o OUTDIR` is not given (it must be empty or not exist), a temporary
 directory is used and cleaned up afterwards.
 
+## Using the tool in an instrument repository
+
+To reproduce the CI tests locally before committing, run the following from
+the repository root, in the conda environment created from its `conda.yml`
+(`conda env create -f conda.yml`):
+
+```
+pip install git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+mcstas-ess-instr-citool -a runci .
+```
+
+`mcstas-ess-instr-citool -a check .` quickly validates the layout, and
+`mcstas-ess-instr-citool .` shows a summary of the project.
+
+A GitLab CI configuration (`.gitlab-ci.yml`) for ESS instrument repositories
+at git.esss.dk, doing the same:
+
+```
+runci:
+  tags:
+    - python311  # as used by other ESS instrument repositories
+  variables:
+    MAMBA_ROOT_PREFIX: "$CI_PROJECT_DIR/.micromamba"
+  script:
+    # Uncompressed micromamba executable (the runner has no bzip2):
+    - curl -Ls -o .micromamba/bin/micromamba --create-dirs https://github.com/mamba-org/micromamba-releases/releases/latest/download/micromamba-linux-64
+    - chmod +x .micromamba/bin/micromamba
+    - .micromamba/bin/micromamba create -y -q -n ci -f conda.yml
+    - .micromamba/bin/micromamba run -n ci pip install -q git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+    - .micromamba/bin/micromamba run -n ci mcstas-ess-instr-citool -a runci .
+```
+
+The micromamba files are kept in the hidden `.micromamba/` directory, since
+other files are not allowed at the top level of the repository.
+
 ## Tests
 
 Run the tests with:
@@ -247,4 +282,7 @@ pytest
 Tests that need McStas or McStasScript are skipped when these are not
 available. The GitHub workflow in `.github/workflows/ci.yml` runs the tests
 both without McStas (on several Python versions) and with McStas from
-conda-forge (including running `mctest` on all examples).
+conda-forge (including running `mctest` on all examples). It also runs
+`runci` on each example project in the conda environment from its own
+`conda.yml` (as the CI of an instrument repository would), and checks the
+code with `ruff check` (configured in `pyproject.toml`).
