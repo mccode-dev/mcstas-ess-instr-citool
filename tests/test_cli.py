@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-from mcstas_ess_instr_citool.cli import main
 from conftest import EXAMPLES, EXAMPLES_DIR
+from mcstas_ess_instr_citool.cli import main
 
 
 @pytest.mark.parametrize("example", EXAMPLES)

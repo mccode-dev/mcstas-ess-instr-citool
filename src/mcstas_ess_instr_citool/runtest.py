@@ -1,6 +1,7 @@
-import subprocess
-import shlex
 import json
+import shlex
+import subprocess
+
 
 def mctest_args( instrdir, testdir, mpi = None ):
     """Arguments for mctest. If mpi is an integer or "auto" (meaning the
@@ -16,9 +17,9 @@ def mctest_args( instrdir, testdir, mpi = None ):
     return cmd
 
 def runtest( info, outdir, mpi = None ):
-    from .util import mcstas_info
     from .generate import generate
     from .localfiles import check_local_components
+    from .util import mcstas_info
     mctest_cmd = mcstas_info()['cmd']['mctest']
     check_local_components( info )
     instrdir = generate( info, outdir )
@@ -47,10 +48,10 @@ def run_extra_pytests( info, outdir ):
     is copied to outdir and pytest is run from within it, with instrpy/ (for
     the instrpy layout) and extra/ (and extra/src/, if present) added to
     PYTHONPATH."""
+    import importlib.util
     import os
     import shutil
     import sys
-    import importlib.util
     srcdir = info.get("extra_pytests_dir")
     if not srcdir:
         return

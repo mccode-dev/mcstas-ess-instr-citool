@@ -19,9 +19,9 @@ def mcstas_info():
     major, minor, patch = o.split(".", 2)
     version = ( int(major), int(minor), int(patch) )
     if not version >= minimum_mcstas_version:
+        needed = '.'.join(str(i) for i in minimum_mcstas_version)
         raise RuntimeError('Too old McStas found: '
-                           '%i.%i.%i (needs %i.%i.%i)'%(*version,
-                                                        *minimum_mcstas_version))
+                           f'{major}.{minor}.{patch} (needs {needed})')
     _cache[0] = { 'cmd' : cmds, 'version' : version }
     return _cache[0]
 

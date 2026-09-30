@@ -1,9 +1,9 @@
-from pathlib import Path
 import importlib
 import multiprocessing as mp
+import os
 import sys
 import traceback
-import os
+from pathlib import Path
 
 # Max time (seconds) allowed for generating a single .instr file from a
 # McStasScript python file:

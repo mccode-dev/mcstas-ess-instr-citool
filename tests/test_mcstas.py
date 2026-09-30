@@ -4,10 +4,10 @@ import shutil
 
 import pytest
 
+from conftest import EXAMPLES, EXAMPLES_DIR
+from mcstas_ess_instr_citool.analyse import analyse_dir
 from mcstas_ess_instr_citool.cli import main
 from mcstas_ess_instr_citool.generate import generate
-from mcstas_ess_instr_citool.analyse import analyse_dir
-from conftest import EXAMPLES, EXAMPLES_DIR
 
 needs_mcstas = pytest.mark.skipif(
     not all(shutil.which(c) for c in ["mcstas", "mcrun", "mctest"]),
@@ -17,8 +17,7 @@ needs_mcstas = pytest.mark.skipif(
 
 @needs_mcstas
 def test_mcstas_version():
-    from mcstas_ess_instr_citool.util import (mcstas_info,
-                                              minimum_mcstas_version)
+    from mcstas_ess_instr_citool.util import mcstas_info, minimum_mcstas_version
     assert mcstas_info()["version"] >= minimum_mcstas_version
 
 

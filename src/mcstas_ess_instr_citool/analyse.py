@@ -1,6 +1,8 @@
 
-from .enforce_layout import enforce_instr_layout
 from pathlib import Path
+
+from .enforce_layout import enforce_instr_layout
+
 
 def analyse_dir( project_dir ):
     info = enforce_instr_layout(project_dir)
@@ -13,7 +15,7 @@ def analyse_dir( project_dir ):
 
     pypkgname = None
     if info['layout']=='instrpy':
-        for k,v in merged_modes.items():
+        for v in merged_modes.values():
             ppn = Path(v).parent.name
             if pypkgname is None:
                 pypkgname = ppn

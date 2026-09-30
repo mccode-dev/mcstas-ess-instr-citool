@@ -1,8 +1,8 @@
 import pytest
 
+from conftest import EXAMPLES, EXAMPLES_DIR
 from mcstas_ess_instr_citool import check_condayml
 from mcstas_ess_instr_citool.check_condayml import validate_conda_requirements
-from conftest import EXAMPLES, EXAMPLES_DIR
 
 HEADER = """\
 channels:

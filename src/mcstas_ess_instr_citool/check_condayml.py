@@ -7,7 +7,6 @@ from typing import Any
 
 from .util import minimum_mcstas_version
 
-
 # Every valid environment must contain these as conda dependencies.
 minimal_requirements = {
     "mcstas",

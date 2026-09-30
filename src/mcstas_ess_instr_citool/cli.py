@@ -1,7 +1,7 @@
 import argparse
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import os
 
 ACTIONS = ["generate", "generatepy", "runci", "list", "check", "json", "pprint"]
 DEFAULT_ACTION = "list"

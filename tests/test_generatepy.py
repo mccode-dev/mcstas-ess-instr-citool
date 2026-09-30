@@ -2,12 +2,13 @@ import shutil
 
 import pytest
 
+from conftest import EXAMPLES_DIR
 from mcstas_ess_instr_citool.analyse import analyse_dir
 from mcstas_ess_instr_citool.cli import main
-from mcstas_ess_instr_citool.generatepy import (add_includes_search_path,
-                                                generatepy,
-                                                postprocess_pygen_output)
-from conftest import EXAMPLES_DIR
+from mcstas_ess_instr_citool.generatepy import (
+    add_includes_search_path,
+    postprocess_pygen_output,
+)
 
 needs_mcstas = pytest.mark.skipif(
     not all(shutil.which(c) for c in ["mcstas", "mcrun", "mctest",

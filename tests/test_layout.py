@@ -2,8 +2,8 @@ import shutil
 
 import pytest
 
-from mcstas_ess_instr_citool.analyse import analyse_dir
 from conftest import EXAMPLES, EXAMPLES_DIR
+from mcstas_ess_instr_citool.analyse import analyse_dir
 
 
 def fails(project_dir, match):
@@ -38,8 +38,7 @@ def test_example_details():
     assert info["layout"] == "instrpy"
     assert info["mode_names"] == ["Long"]
     assert info["helper_modules"] == ["common", "geometry", "monitors"]
-    for example, prefix in [("ExInstrLocalFiles", ""),
-                            ("ExPyLocalFiles", "")]:
+    for example in ["ExInstrLocalFiles", "ExPyLocalFiles"]:
         info = analyse_dir(EXAMPLES_DIR / example)
         assert info["extra_files"] == {
             "localcomps": ["ExCountMonitor.comp", "ex-count-lib.c",

@@ -13,6 +13,58 @@ concurrency:
 
 jobs:
 
+  # Lint the code of the tool (configuration in pyproject.toml):
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install ruff
+        run: python -m pip install ruff
+      - name: Run ruff
+        run: ruff check
+
+  # List the example projects, for the examples job below:
+  list-examples:
+    name: List example projects
+    runs-on: ubuntu-latest
+    outputs:
+      examples: ${{ steps.list.outputs.examples }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: list
+        run: |
+          python3 -c 'import json, os; print("examples=" + json.dumps(sorted(os.listdir("example_repos"))))' >> "$GITHUB_OUTPUT"
+
+  # Test each example project like a real project: in the conda environment
+  # from its own conda.yml, with the tool installed with pip:
+  examples:
+    name: Example ${{ matrix.example }}
+    needs: list-examples
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        example: ${{ fromJSON(needs.list-examples.outputs.examples) }}
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: mamba-org/setup-micromamba@v3
+        with:
+          environment-file: example_repos/${{ matrix.example }}/conda.yml
+          environment-name: example
+      - name: Install the tool
+        run: python -m pip install --no-deps .
+      - name: Check the project layout
+        run: mcstas-ess-instr-citool -a check example_repos/${{ matrix.example }}
+      - name: Run the tests (runci)
+        run: mcstas-ess-instr-citool -a runci example_repos/${{ matrix.example }}
+
   # Fast tests with plain pip-installed Python (tests needing McStas are
   # automatically skipped):
   unittests:

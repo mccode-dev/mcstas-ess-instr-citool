@@ -23,7 +23,7 @@ def summary(info):
         print(f"  Helper modules:     {', '.join(info['helper_modules'])}")
     if info['pypkgname'] is not None:
         print('  Example python imports:')
-        for name,path in info['setups'].items():
+        for path in info['setups'].values():
             p = P(path)
             assert p.parent.name == info['pypkgname']
             print(f"{indent}from {p.parent.name}.{p.stem} import make as make_instr")

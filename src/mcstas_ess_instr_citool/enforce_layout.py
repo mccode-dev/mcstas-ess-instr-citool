@@ -1,19 +1,18 @@
+import fnmatch
 import keyword
 import os
-import re
-from typing import Dict, List, Optional
 import pathlib
-import fnmatch
-
+import re
 import tomllib  # Python 3.11+ only
 
 from .localfiles import subdir_patterns
+
 
 def _is_ignored(fname: str) -> bool:
     # Hidden files (.DS_Store, .#emacs-lock, ...) and backup files (foo~)
     return fname.startswith('.') or fname.endswith('~')
 
-def _instrument_name(path: str) -> Optional[str]:
+def _instrument_name(path: str) -> str | None:
     """Name given by the (first) DEFINE INSTRUMENT statement of an .instr file,
     ignoring comments."""
     text = pathlib.Path(path).read_text(encoding="utf-8", errors="replace")
@@ -47,7 +46,7 @@ def check_root_entries(project_dir: str) -> None:
             + " and the files " + ", ".join(ROOT_FILE_PATTERNS)
             + " are allowed (anything else can be placed in extra/).")
 
-def enforce_instr_layout(project_dir: str) -> Dict:
+def enforce_instr_layout(project_dir: str) -> dict:
     """
     Enforce one of these layouts under `project_dir`:
 
@@ -128,7 +127,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
     def ensure_files_in_dir( base_dir: str,
                              ext: str,
                              subdirpatterns : list[str] | None = None,
-                             allow_helpers : bool = False ) -> Dict:
+                             allow_helpers : bool = False ) -> dict:
         main_pat = re.compile(rf"^{project_re}_main{re.escape(ext)}$")
         mode_pat = re.compile(rf"^{project_re}_mode{mode_re}{re.escape(ext)}$")
 
@@ -168,11 +167,11 @@ def enforce_instr_layout(project_dir: str) -> Dict:
                                          f' {subdirs[dirname]}')
                     extra_files.setdefault(dirname, []).append( fextra.name )
 
-        project_name: Optional[str] = None
-        main_path: Optional[str] = None
-        helper_files: List[str] = []
-        mode_names: List[str] = []
-        mode_paths: List[str] = []
+        project_name: str | None = None
+        main_path: str | None = None
+        helper_files: list[str] = []
+        mode_names: list[str] = []
+        mode_paths: list[str] = []
         main_count = 0
 
 
@@ -276,7 +275,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
             "extra_files" : extra_files,
             "modes": [
                 {"mode": mode, "path": path}
-                for mode, path in sorted(zip(mode_names, mode_paths), key=lambda x: x[0])
+                for mode, path in sorted(zip(mode_names, mode_paths, strict=True), key=lambda x: x[0])
             ],
             "mode_names": sorted(mode_names),
             "helper_modules": helper_modules,
