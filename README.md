@@ -64,6 +64,25 @@ An instrument project is a directory containing:
     * Optionally `localcomps/` and `localdata/` subdirectories (inside the
       python package) with project-specific components and data files (see
       below).
+* Optionally an `extra/` directory with any other content of the project
+  (e.g. notebooks, analysis code, scripts, unused components). There are no
+  rules for its content.
+* Optionally an `extra_pytests/` directory with tests, which are run with
+  `pytest` by `runci` (see below). `pytest` must then be listed in
+  `conda.yml`.
+* Optionally files named `README*`, `TODO*`, `LICENSE*` and `CHANGELOG*`.
+* Nothing else, apart from hidden files and directories (names starting with
+  `.`, e.g. `.gitignore` and `.gitlab-ci.yml`).
+
+### Tests in extra_pytests/
+
+`runci` copies `extra_pytests/` to its output directory and runs `pytest`
+from within the copy (so relative paths in the tests work, and files written
+by the tests do not end up in the project). The python packages of the
+project are made available with `PYTHONPATH`, without installing anything:
+`instrpy/` (for the `instrpy` layout), and `extra/` and `extra/src/` (if
+present), so e.g. an analysis package in `extra/` can be used by the tests.
+See the `ExPyExtra` example.
 
 ### Local components and data files
 
@@ -157,6 +176,9 @@ dependencies:
   C library) and an NCrystal material file (`localdata/ExAlLike.ncmat`).
 * `example_repos/ExPyLocalFiles`: the same instrument, as hand-written
   McStasScript code.
+* `example_repos/ExPyExtra`: a small hand-written McStasScript instrument,
+  with an analysis package and a script in `extra/`, and tests in
+  `extra_pytests/` which use both (one of them runs a short simulation).
 
 ## The mcstas-ess-instr-citool tool
 
@@ -201,7 +223,9 @@ failing with an error message on any violation. Available actions:
   removed from the output, so it is reproducible.
 * `runci`: check that local components do not shadow McStas components, then
   run `generate`, followed by `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
-  line, and all examples must pass.
+  line, and all examples must pass. Finally, if the project has an
+  `extra_pytests/` directory, the tests in it are run with `pytest` (see
+  above).
   With `--mpi N` (or `--mpi auto` for the number of available processors),
   the instruments are compiled and run with MPI, using N processes. This
   tests that the instruments work with MPI. It does not necessarily make
