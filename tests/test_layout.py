@@ -89,6 +89,53 @@ def test_stray_file(copy_example):
              r"includes snippets localcomps localdata\.$")
 
 
+def test_root_allowed_entries(copy_example):
+    d = copy_example("ExInstrBasic")
+    for f in ["README.md", "README", "TODO", "LICENSE", "CHANGELOG.md",
+              ".gitignore", ".gitlab-ci.yml", "backup~"]:
+        (d / f).touch()
+    for sub in ["extra", "extra_pytests", ".github", "__pycache__"]:
+        (d / sub).mkdir()
+    (d / "extra" / "anything.ipynb").touch()
+    (d / "extra" / "somedir").mkdir()
+    with open(d / "conda.yml", "a") as f:
+        f.write("  - pytest\n")
+    info = analyse_dir(d)
+    assert info["extra_dir"] == str(d / "extra")
+    assert info["extra_pytests_dir"] == str(d / "extra_pytests")
+
+
+def test_root_no_extras(copy_example):
+    info = analyse_dir(copy_example("ExPyHelpers"))
+    assert info["extra_dir"] is None
+    assert info["extra_pytests_dir"] is None
+
+
+@pytest.mark.parametrize("entry,is_dir", [
+    ("notebook.ipynb", False), ("tests", True), ("pyproject.toml", False),
+    ("readme.md", False), ("docs", True)])
+def test_root_unexpected_entries(copy_example, entry, is_dir):
+    d = copy_example("ExInstrBasic")
+    if is_dir:
+        (d / entry).mkdir()
+    else:
+        (d / entry).touch()
+    fails(d, rf"Unexpected file or directory '{entry}'.*extra/")
+
+
+@pytest.mark.parametrize("entry", ["extra", "extra_pytests"])
+def test_root_extras_must_be_dirs(copy_example, entry):
+    d = copy_example("ExInstrBasic")
+    (d / entry).touch()
+    fails(d, f"'{entry}' .* must be a directory")
+
+
+def test_root_extra_pytests_needs_pytest(copy_example):
+    d = copy_example("ExInstrBasic")
+    (d / "extra_pytests").mkdir()
+    fails(d, "pytest must be listed in conda.yml")
+
+
 def test_stray_file_instrpy_msg(copy_example):
     d = copy_example("ExPyGenerated")
     (d / "instrpy" / "ExPyGenerated_instr" / "README.md").touch()

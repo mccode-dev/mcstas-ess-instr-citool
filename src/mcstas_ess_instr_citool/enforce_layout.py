@@ -22,6 +22,31 @@ def _instrument_name(path: str) -> Optional[str]:
     m = re.search(r"\bDEFINE\s+INSTRUMENT\s+([A-Za-z_]\w*)", text)
     return m.group(1) if m else None
 
+# Directories and files allowed at the top level of a project (in addition to
+# hidden files like .gitignore or .gitlab-ci.yml, which are ignored):
+ROOT_DIRS = ("instr", "instrpy", "extra", "extra_pytests")
+ROOT_FILE_PATTERNS = ("conda.yml", "README*", "TODO*", "LICENSE*", "CHANGELOG*")
+
+def check_root_entries(project_dir: str) -> None:
+    """Raise ValueError if the top level of the project contains anything
+    else than the allowed directories and files."""
+    for entry in sorted(os.listdir(project_dir)):
+        if _is_ignored(entry) or entry == "__pycache__":
+            continue
+        path = os.path.join(project_dir, entry)
+        if entry in ROOT_DIRS:
+            if not os.path.isdir(path):
+                raise ValueError(f"'{entry}' in '{project_dir}' must be a directory.")
+            continue
+        if ( os.path.isfile(path)
+             and any(fnmatch.fnmatchcase(entry, p) for p in ROOT_FILE_PATTERNS) ):
+            continue
+        raise ValueError(
+            f"Unexpected file or directory '{entry}' in '{project_dir}'."
+            " Only the directories " + ", ".join(f"{d}/" for d in ROOT_DIRS)
+            + " and the files " + ", ".join(ROOT_FILE_PATTERNS)
+            + " are allowed (anything else can be placed in extra/).")
+
 def enforce_instr_layout(project_dir: str) -> Dict:
     """
     Enforce one of these layouts under `project_dir`:
@@ -48,8 +73,14 @@ def enforce_instr_layout(project_dir: str) -> Dict:
          - optional files: includes/*.(h|c), localcomps/*.(comp|c|h) and
            localdata/* (only certain types, see localfiles.py)
 
+    The top level of project_dir may only contain conda.yml, the instr/ or
+    instrpy/ directory, the optional directories extra/ (anything, with no
+    rules) and extra_pytests/ (tests run with pytest), and files named
+    README*, TODO*, LICENSE* or CHANGELOG*. If extra_pytests/ exists, pytest
+    must be listed in conda.yml.
+
     Hidden files (names starting with '.') and backup files (names ending
-    with '~') are ignored. Other files are in general ignored.
+    with '~') are ignored.
 
     PROJECTNAME: [A-Za-z][A-Za-z0-9]*
     MODENAME:     [A-Za-z][A-Za-z0-9]*
@@ -69,6 +100,18 @@ def enforce_instr_layout(project_dir: str) -> Dict:
 
     from .check_condayml import validate_conda_requirements
     condareq = validate_conda_requirements(condareqfile)
+
+    check_root_entries(project_dir)
+    extra_dir = os.path.join(project_dir, "extra")
+    extra_pytests_dir = os.path.join(project_dir, "extra_pytests")
+    extras = {
+        "extra_dir": extra_dir if os.path.isdir(extra_dir) else None,
+        "extra_pytests_dir": extra_pytests_dir if os.path.isdir(extra_pytests_dir) else None,
+    }
+    if extras["extra_pytests_dir"] and not any(
+            r["name"] == "pytest" for r in condareq):
+        raise ValueError("pytest must be listed in conda.yml, since the"
+                         " project has an extra_pytests/ directory.")
 
     has_instr = os.path.isdir(instr_dir)
     has_instrpy = os.path.isdir(instrpy_dir)
@@ -279,6 +322,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
             "project_dir": project_dir,
             "layout": "instr",
             "base_dir": instr_dir,
+            **extras,
             **payload,
         }
 
@@ -355,6 +399,7 @@ def enforce_instr_layout(project_dir: str) -> Dict:
         "project_dir": project_dir,
         "layout": "instrpy",
         "base_dir": instrpy_subdir,
+        **extras,
         "pyproject": {"path": pyproject_path, "declared_project_name": declared_project_name},
         **payload,
     }

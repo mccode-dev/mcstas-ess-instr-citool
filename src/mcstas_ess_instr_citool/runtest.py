@@ -39,7 +39,43 @@ def runtest( info, outdir, mpi = None ):
     res = json.loads(jsonfile.read_text())
     check_results(res)
     #TODO: Use the json results for anything else?
+    run_extra_pytests( info, outdir )
     return res
+
+def run_extra_pytests( info, outdir ):
+    """Run the tests in extra_pytests/ (if present) with pytest. The directory
+    is copied to outdir and pytest is run from within it, with instrpy/ (for
+    the instrpy layout) and extra/ (and extra/src/, if present) added to
+    PYTHONPATH."""
+    import os
+    import shutil
+    import sys
+    import importlib.util
+    srcdir = info.get("extra_pytests_dir")
+    if not srcdir:
+        return
+    if importlib.util.find_spec("pytest") is None:
+        raise RuntimeError("pytest is needed to run the tests in extra_pytests/")
+    testdir = outdir.joinpath("extra_pytests").absolute()
+    shutil.copytree( srcdir, testdir,
+                     ignore = shutil.ignore_patterns('__pycache__', '.*') )
+    paths = []
+    if info["layout"] == "instrpy":
+        paths.append( os.path.dirname(info["base_dir"]) )
+    extra_dir = info.get("extra_dir")
+    if extra_dir:
+        paths.append( extra_dir )
+        if os.path.isdir(os.path.join(extra_dir, "src")):
+            paths.append( os.path.join(extra_dir, "src") )
+    env = dict(os.environ)
+    if env.get("PYTHONPATH"):
+        paths.append( env["PYTHONPATH"] )
+    env["PYTHONPATH"] = os.pathsep.join(paths)
+    cmd = [ sys.executable, '-m', 'pytest', '-p', 'no:cacheprovider' ]
+    print(f"Launching: python {shlex.join(cmd[1:])} (in {testdir})", flush=True)
+    ec = subprocess.run( cmd, cwd = testdir, env = env, check = False )
+    if ec.returncode != 0:
+        raise RuntimeError('pytest failed for the tests in extra_pytests/')
 
 def check_results( res ):
     """Double-check the mctest json results, since mctest does not always
