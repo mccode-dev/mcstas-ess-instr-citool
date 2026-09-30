@@ -43,6 +43,14 @@ TODO items for mcstas-ess-instr-citool
   LFS) for data files. In the surveyed instrument repositories, the largest
   data file is a 38 MB .hkl file (MAGiC).
 
+* McStasScript: instr.add_search(cmd, SHELL=True) writes a "SEARCH SHELL"
+  statement, but also tries to load components from a folder named like the
+  command itself (printing "Did not find specified folder"), so components
+  found only via the command cannot be used with add_component. Propose a
+  McStasScript PR which runs the command (as McStas does) and loads the
+  components from the resulting directories. This is needed for the
+  translation of SEARCH SHELL statements by mcstas-pygen (see next item).
+
 * mcstas-pygen drops SEARCH statements, so generatepy adds
   instr.add_search() for localcomps/ itself. Consider proposing upstream that
   mcstas-pygen translates SEARCH statements into instr.add_search() calls
