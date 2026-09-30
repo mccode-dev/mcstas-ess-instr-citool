@@ -25,14 +25,17 @@ def _instrument_name(path: str) -> str | None:
 # hidden files like .gitignore or .gitlab-ci.yml, which are ignored):
 ROOT_DIRS = ("instr", "instrpy", "extra", "extra_pytests")
 ROOT_FILE_PATTERNS = ("conda.yml", "README*", "TODO*", "LICENSE*", "CHANGELOG*")
+# Local directories which are not part of the project (not in git):
+ROOT_IGNORED_DIRS = ("__pycache__", "venv")
 
 def check_root_entries(project_dir: str) -> None:
     """Raise ValueError if the top level of the project contains anything
     else than the allowed directories and files."""
     for entry in sorted(os.listdir(project_dir)):
-        if _is_ignored(entry) or entry == "__pycache__":
-            continue
         path = os.path.join(project_dir, entry)
+        if _is_ignored(entry) or ( entry in ROOT_IGNORED_DIRS
+                                   and os.path.isdir(path) ):
+            continue
         if entry in ROOT_DIRS:
             if not os.path.isdir(path):
                 raise ValueError(f"'{entry}' in '{project_dir}' must be a directory.")

@@ -72,7 +72,9 @@ An instrument project is a directory containing:
   `conda.yml`.
 * Optionally files named `README*`, `TODO*`, `LICENSE*` and `CHANGELOG*`.
 * Nothing else, apart from hidden files and directories (names starting with
-  `.`, e.g. `.gitignore` and `.gitlab-ci.yml`).
+  `.`, e.g. `.gitignore` and `.gitlab-ci.yml`), and the local directories
+  `venv/` (a Python virtual environment, see below) and `__pycache__/`, which
+  should be listed in `.gitignore`.
 
 ### Tests in extra_pytests/
 
@@ -245,6 +247,23 @@ the repository root, in the conda environment created from its `conda.yml`
 pip install git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
 mcstas-ess-instr-citool -a runci .
 ```
+
+To keep the tool out of the conda environment, it can instead be installed in
+a Python virtual environment in a `venv/` directory in the repository root
+(which is allowed by the layout rules, and should be in `.gitignore`). The
+virtual environment must be created from within the activated conda
+environment, with `--system-site-packages`, so that McStas and the Python
+packages of the conda environment remain available:
+
+```
+python3 -m venv --system-site-packages venv
+. venv/bin/activate
+pip install git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+mcstas-ess-instr-citool -a runci .
+```
+
+In later sessions, activate the conda environment and then the virtual
+environment (`. venv/bin/activate`) before running the tool.
 
 `mcstas-ess-instr-citool -a check .` quickly validates the layout, and
 `mcstas-ess-instr-citool .` shows a summary of the project.
