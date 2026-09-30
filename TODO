@@ -56,10 +56,13 @@ TODO items for mcstas-ess-instr-citool
   currently search $HOME.
 
 * mcstas-pygen drops SEARCH statements, so generatepy adds
-  instr.add_search() for localcomps/ itself. Consider proposing upstream that
-  mcstas-pygen translates SEARCH statements into instr.add_search() calls
-  (relative paths would need care, since McStasScript runs the instrument
-  elsewhere).
+  instr.add_search() for localcomps/ itself. A fix is prepared for McCode
+  (branch pygen-search in tkittel/McCode, PR to be opened): mcstas-pygen
+  translates SEARCH statements into instr.add_search() calls (relative paths
+  relative to the generated script), and the generated make() uses the
+  directory of the script as default input_path. Once a McStas release with it
+  is required, remove the workaround in generatepy (and possibly the copying of
+  localdata/ for the instrpy layout).
 
 * NCrystal resolves relative paths of data files (e.g.
   "localdata/X.ncmat") only relative to the working directory, unlike McStas
