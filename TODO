@@ -56,8 +56,8 @@ TODO items for mcstas-ess-instr-citool
   currently search $HOME.
 
 * mcstas-pygen drops SEARCH statements, so generatepy adds
-  instr.add_search() for localcomps/ itself. A fix is prepared for McCode
-  (branch pygen-search in tkittel/McCode, PR to be opened): mcstas-pygen
+  instr.add_search() for localcomps/ itself. A fix is proposed in
+  https://github.com/mccode-dev/McCode/pull/2718 (open): mcstas-pygen
   translates SEARCH statements into instr.add_search() calls (relative paths
   relative to the generated script), and the generated make() uses the
   directory of the script as default input_path. Once a McStas release with it
