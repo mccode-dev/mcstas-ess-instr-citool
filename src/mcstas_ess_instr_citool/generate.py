@@ -13,6 +13,8 @@ def generate( info, outdir, pygen_timeout = DEFAULT_PYGEN_TIMEOUT ):
     assert outdir.is_dir()
     instrdir = outdir.joinpath('instr')
     if info['layout']=='instrpy':
+        from .util import check_mcstasscript_version
+        check_mcstasscript_version()
         def genfct( name, srcpath, outdir ):
             return _genpy( name, srcpath, outdir, timeout = pygen_timeout )
     else:

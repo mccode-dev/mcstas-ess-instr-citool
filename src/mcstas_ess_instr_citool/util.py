@@ -1,6 +1,7 @@
 import subprocess
 
 minimum_mcstas_version = (3,8,8)
+minimum_mcstasscript_version = (0,0,94)
 
 _cache = [None]
 def mcstas_info():
@@ -24,6 +25,20 @@ def mcstas_info():
                            f'{major}.{minor}.{patch} (needs {needed})')
     _cache[0] = { 'cmd' : cmds, 'version' : version }
     return _cache[0]
+
+def check_mcstasscript_version():
+    from importlib.metadata import PackageNotFoundError, version
+    try:
+        v = version('mcstasscript')
+    except PackageNotFoundError:
+        raise RuntimeError('McStasScript not found') from None
+    needed = '.'.join(str(i) for i in minimum_mcstasscript_version)
+    try:
+        ok = tuple(int(i) for i in v.split('.')[:3]) >= minimum_mcstasscript_version
+    except ValueError:
+        ok = True  # unusual version string, e.g. a development version
+    if not ok:
+        raise RuntimeError(f'Too old McStasScript found: {v} (needs {needed})')
 
 def get_nprocs( nice_factor = 0.9 ):
     import os

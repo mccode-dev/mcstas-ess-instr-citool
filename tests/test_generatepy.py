@@ -128,37 +128,10 @@ def test_add_includes_search_path():
         "    instr.set_dependency(' @NCRYSTALFLAGS@')\n    # MCSTAS system dir")
     code = add_includes_search_path(fake)
     assert "import argparse\nimport pathlib\n" in code
-    assert "instr.add_dependency('-I' + _package_dir)" in code
-    # The code works with and without McStasScript support for
-    # add_dependency:
-    import pathlib
-    ns = {"__file__": "/some/pkg/X_main.py", "pathlib": pathlib}
-    # (On Windows, the resolved path gets a drive letter):
-    pkgdir = pathlib.Path("/some/pkg/X_main.py").resolve().parent.as_posix()
-    body = code[code.index("    _package_dir ="):code.index("    # MCSTAS system")]
-    body = "\n".join(line[4:] for line in body.splitlines())
-
-    class OldInstr:
-        dependency_statement = '" @NCRYSTALFLAGS@"'
-
-        def set_dependency(self, string):
-            self.dependency_statement = '"' + string + '"'
-
-    class NewInstr(OldInstr):
-        def add_dependency(self, string):
-            self.added = string
-
-    for cls, expected in [(OldInstr, f'"@NCRYSTALFLAGS@ -I{pkgdir}"'),
-                          (NewInstr, '" @NCRYSTALFLAGS@"')]:
-        instr = cls()
-        exec(body, dict(ns, instr=instr))
-        assert instr.dependency_statement == expected
-    instr = NewInstr()
-    exec(body, dict(ns, instr=instr))
-    assert instr.added == f"-I{pkgdir}"
-    with pytest.raises(RuntimeError, match="must not contain spaces"):
-        exec(body, dict(ns, instr=OldInstr(),
-                        __file__="/some dir/pkg/X_main.py"))
+    lines = code.splitlines()
+    dep = lines.index("    instr.set_dependency(' @NCRYSTALFLAGS@')")
+    assert lines[dep + 2] == ("    instr.add_include_dir("
+                              "pathlib.Path(__file__).resolve().parent)")
 
 
 def test_add_local_files_code():
@@ -176,7 +149,7 @@ def test_add_local_files_code():
     assert "shutil.copytree(_localdata_src, _localdata_dest" in code
     # Also after the includes/ code:
     code2 = add_local_files_code(add_includes_search_path(fake), True, False)
-    assert code2.index("_package_dir = ") < code2.index("instr.add_search(")
+    assert code2.index("instr.add_include_dir(") < code2.index("instr.add_search(")
     assert code2.count("import pathlib") == 1
 
 

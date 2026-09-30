@@ -21,6 +21,27 @@ def test_mcstas_version():
     assert mcstas_info()["version"] >= minimum_mcstas_version
 
 
+@pytest.mark.parametrize("version,error", [
+    ("0.0.94", None), ("0.1.0", None), ("0.0.95.dev1", None),
+    ("0.0.93", "Too old McStasScript found: 0.0.93"), (None, "not found")])
+def test_mcstasscript_version(monkeypatch, version, error):
+    import importlib.metadata
+
+    from mcstas_ess_instr_citool.util import check_mcstasscript_version
+
+    def fake_version(name):
+        assert name == "mcstasscript"
+        if version is None:
+            raise importlib.metadata.PackageNotFoundError(name)
+        return version
+    monkeypatch.setattr(importlib.metadata, "version", fake_version)
+    if error is None:
+        check_mcstasscript_version()
+    else:
+        with pytest.raises(RuntimeError, match=error):
+            check_mcstasscript_version()
+
+
 def test_generate_instrpy(tmp_path, monkeypatch):
     pytest.importorskip("mcstasscript")
     monkeypatch.chdir(tmp_path)  # generate() changes the working directory

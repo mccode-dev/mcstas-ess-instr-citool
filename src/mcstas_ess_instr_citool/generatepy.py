@@ -150,18 +150,8 @@ def postprocess_pygen_output( code, name, instr_text ):
 
 
 _INCLUDES_CODE = """\
-    # Let the C compiler find the files in includes/ in this python package
-    # (the path must not contain spaces, since it is put in the DEPENDENCY line):
-    _package_dir = pathlib.Path(__file__).resolve().parent.as_posix()
-    if ' ' in _package_dir:
-        raise RuntimeError('The path of the instrument package must not'
-                           ' contain spaces: ' + _package_dir)
-    if hasattr(instr, 'add_dependency'):
-        instr.add_dependency('-I' + _package_dir)
-    else:
-        # McStasScript without add_dependency (0.0.93 and earlier):
-        instr.set_dependency((instr.dependency_statement.strip('"')
-                              + ' -I' + _package_dir).strip())
+    # Let the C compiler find the files in includes/ in this python package:
+    instr.add_include_dir(pathlib.Path(__file__).resolve().parent)
 """
 
 
