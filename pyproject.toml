@@ -13,6 +13,10 @@ authors = [
   { name = "Peter Willendrup (European Spallation Source ERIC)" },
   { name = "Thomas Kittelmann (European Spallation Source ERIC)" }
 ]
+# NCrystal is used to check that files in localdata/ do not have the same
+# names as materials in the NCrystal standard library (it is anyway a
+# dependency of McStas):
+dependencies = ["ncrystal"]
 
 [project.optional-dependencies]
 test = ["pytest"]

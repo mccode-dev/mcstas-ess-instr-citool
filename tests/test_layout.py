@@ -367,3 +367,39 @@ def test_local_component_shadowing(tmp_path):
     for comps in (["Mine.comp", "ExampleOnly.comp", "lib.c", "Arm.c"], []):
         check_local_components({"extra_files": {"localcomps": comps}}, resdir)
     check_local_components({"extra_files": {}}, resdir)
+
+
+def test_local_data_shadowing(tmp_path):
+    from mcstas_ess_instr_citool.localfiles import check_local_data
+    resdir = tmp_path / "resources"
+    (resdir / "data" / "Gas_tables").mkdir(parents=True)
+    (resdir / "data" / "Al.laz").touch()
+    (resdir / "data" / "Gas_tables" / "He3inAr.table").touch()
+    (resdir / "examples" / "Some").mkdir(parents=True)
+    (resdir / "examples" / "Some" / "example_only.txt").touch()
+    ncnames = ["Al_sg225.ncmat", "Cu_sg225.ncmat"]
+
+    def check(files):
+        check_local_data({"extra_files": {"localdata": files}}, resdir, ncnames)
+
+    with pytest.raises(RuntimeError, match="must not have the same names.*:"
+                       " Al.laz \\(McStas data file\\)\\."):
+        check(["Al.laz", "mine.laz"])
+    with pytest.raises(RuntimeError, match=": Al_sg225.ncmat \\(NCrystal"
+                       " standard library material\\), he3inar.table \\(McStas"
+                       " data file\\)\\."):
+        check(["Al_sg225.ncmat", "he3inar.table", "mine.ncmat"])
+    # Case-insensitive:
+    with pytest.raises(RuntimeError, match=": cu_SG225.NCMAT"):
+        check(["cu_SG225.NCMAT"])
+    for files in (["mine.laz", "example_only.txt", "Al.lau", "Al.ncmat"], []):
+        check(files)
+    check_local_data({"extra_files": {}}, resdir, ncnames)
+
+
+def test_ncrystal_stdlib_file_names():
+    pytest.importorskip("NCrystal")
+    from mcstas_ess_instr_citool.localfiles import ncrystal_stdlib_file_names
+    names = ncrystal_stdlib_file_names()
+    assert "Al_sg225.ncmat" in names
+    assert all(n.endswith(".ncmat") for n in names)

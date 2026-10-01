@@ -95,7 +95,11 @@ Project-specific components and data files are placed in two subdirectories
   `*.rfl`, `*.trm`, `*.ref`, `*.sqw`, `*.dat`, `*.txt`, `*.off`, `*.ply`,
   `*.mcpl` and `*.mcpl.gz` (see `localfiles.py`).
 
-Neither may contain subdirectories. The instruments refer to these files as
+Neither may contain subdirectories. Files in `localdata/` must not have the
+same names as data files of McStas (e.g. `Al.laz`) or materials of the
+NCrystal standard library (e.g. `Al_sg225.ncmat`), compared
+case-insensitively, since it would be easy to confuse them (this is checked by
+`runci`). The instruments refer to these files as
 follows (see the `ExInstrLocalFiles` and `ExPyLocalFiles` examples):
 
 * For the `instr` layout, a `SEARCH "localcomps"` statement in the `TRACE`
@@ -219,7 +223,9 @@ failing with an error message on any violation. Available actions:
   instrument is named after the file, `%Example` lines are translated into
   McStasScript tests (`instr.add_test`), and dates and local paths are
   removed from the output, so it is reproducible.
-* `runci`: check that local components do not shadow McStas components, then
+* `runci`: check that local components do not shadow McStas components, and
+  that local data files do not have the names of McStas data files or
+  NCrystal standard library materials, then
   run `generate`, followed by `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
   line, and all examples must pass. Finally, if the project has an
   `extra_pytests/` directory, the tests in it are run with `pytest` (see
