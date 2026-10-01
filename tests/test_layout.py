@@ -1,4 +1,5 @@
 import shutil
+import sys
 
 import pytest
 
@@ -397,6 +398,8 @@ def test_local_data_shadowing(tmp_path):
     check_local_data({"extra_files": {}}, resdir, ncnames)
 
 
+@pytest.mark.xfail(sys.platform == "win32", reason="NCrystal 4.4.6 fails to"
+                   " list the standard library on Windows (globbing error 267)")
 def test_ncrystal_stdlib_file_names():
     pytest.importorskip("NCrystal")
     from mcstas_ess_instr_citool.localfiles import ncrystal_stdlib_file_names

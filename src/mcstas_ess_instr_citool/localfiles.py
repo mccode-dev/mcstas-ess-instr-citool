@@ -80,9 +80,16 @@ def standard_data_file_names( resourcedir ):
 
 def ncrystal_stdlib_file_names():
     """File names of the materials in the NCrystal standard library, e.g.
-    Al_sg225.ncmat."""
+    Al_sg225.ncmat. If they can not be listed, a warning is printed and an
+    empty set returned (NCrystal 4.4.6 fails to list them on Windows)."""
     import NCrystal
-    return { f.name for f in NCrystal.browseFiles( factory = 'stdlib' ) }
+    try:
+        return { f.name for f in NCrystal.browseFiles( factory = 'stdlib' ) }
+    except NCrystal.NCException as e:
+        print( 'WARNING: Could not list the files of the NCrystal standard'
+               f' library ({e}), so files in localdata/ are not checked'
+               ' against them.' )
+        return set()
 
 def check_local_data( info, resourcedir = None, ncrystal_names = None ):
     """Raise an error if a data file in localdata/ has the same name as a data
