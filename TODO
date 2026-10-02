@@ -7,6 +7,13 @@ TODO items for mcstas-ess-instr-citool
   much for typical tests, since compilation with MPI takes longer, and the
   default mctest simulations are short.
 
+* runci: mctest plots the output of each test (an overview PDF and HTML
+  plots of all monitors), which nobody looks at in CI, and which can take much
+  longer than the tests (about 14 of 15 minutes for the HEIMDAL model). The
+  tool passes --noplots to mctest when mctest supports it (added in
+  https://github.com/mccode-dev/McCode/pull/2734, not yet released). Once a
+  McStas release with it is required, always pass it.
+
 * runci: The JSON test results produced by mctest are only used to check for
   failures which mctest did not report in its exit code (see check_results
   in runtest.py). Decide whether to use them for anything else (e.g.

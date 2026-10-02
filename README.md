@@ -227,7 +227,10 @@ failing with an error message on any violation. Available actions:
   that local data files do not have the names of McStas data files or
   NCrystal standard library materials, then
   run `generate`, followed by `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
-  line, and all examples must pass. Finally, if the project has an
+  line, and all examples must pass. If `mctest` supports it (McStas releases
+  after 3.8.8), `--noplots` is also given, so `mctest` does not plot the
+  output of the tests, which can take much longer than the tests for
+  instruments with many monitors. Finally, if the project has an
   `extra_pytests/` directory, the tests in it are run with `pytest` (see
   above).
   With `--mpi N` (or `--mpi auto` for the number of available processors),
