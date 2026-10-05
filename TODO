@@ -75,8 +75,34 @@ TODO items for mcstas-ess-instr-citool
   (https://github.com/mccode-dev/McCode/pull/2720, in McStas 3.9.0). Other
   components might need similar parameters.
 
-* Instrument repositories at git.esss.dk/dmsc-instrumentmodels: TBL and SKADI
-  use the standard layout, and standard-layout branches exist for FREIA,
-  ODIN, HEIMDAL, NMX, BEER, LOKI, ESTIA, MAGiC and the ESS instrument
-  template (T-REX is not converted). All of them require McStas 3.9.0 and
-  pass runci with it (5 October 2026).
+* Instrument repositories at git.esss.dk/dmsc-instrumentmodels: their state
+  is recorded in the database src/mcstas_ess_instr_citool/repodb.py (listed
+  with "-a repos" and in the documentation), and tested weekly by the
+  workflow instrument-repos.yml. On 6 October 2026, TBL, SKADI, ODIN, FREIA,
+  LOKI and the ESS instrument template use the standard layout on main, and
+  branches with merge requests for it exist for BEER, ESTIA, HEIMDAL,
+  MAGiC, NMX and T-REX. Update standard_layout in the database when they are merged (the
+  workflow warns when a repository marked as not using it passes the
+  check).
+
+* Non-public instrument repositories (BEER, ESTIA, FREIA, HEIMDAL, T-REX)
+  are skipped by the workflow instrument-repos.yml, unless the repository
+  secret DMSC_GITLAB_TOKEN holds a GitLab access token which can read them
+  (e.g. a group access token of dmsc-instrumentmodels with the
+  read_repository scope). Alternatively, make them public.
+
+* PyPI: the workflow pypi.yml builds and checks the distribution for every
+  push, but only uploads it for vX.Y.Z tags when the repository variable
+  PYPI_UPLOAD is "true". Before setting it: create the project on PyPI (the
+  name mcstas-ess-instr-citool must be available), and configure trusted
+  publishing for this repository and the workflow pypi.yml. Then make a
+  first release (e.g. v0.1.0). Once on PyPI, the instrument repositories
+  (and the documentation) can use "pip install mcstas-ess-instr-citool"
+  instead of installing from GitHub.
+
+* Documentation: the workflow publish-doc.yml publishes it on GitHub Pages
+  once GitHub Pages is enabled (Settings, Pages, source "GitHub Actions")
+  and the repository variable PUBLISH_DOC is set to "true". The README and
+  the documentation (doc/source/) now cover the same topics; consider
+  reducing the README to a short overview with a link to the documentation,
+  so the content is only maintained in one place.
