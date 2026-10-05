@@ -67,7 +67,9 @@ An instrument project is a directory containing:
 * Optionally an `extra_pytests/` directory with tests, which are run with
   `pytest` by `runci` (see below). `pytest` must then be listed in
   `conda.yml`.
-* Optionally files named `README*`, `TODO*`, `LICENSE*` and `CHANGELOG*`.
+* Optionally files named `README*`, `TODO*`, `LICENSE*`, `CHANGELOG*` and
+  `CONTRIBUTING*` (e.g. the contacts and contribution guidelines of the
+  project).
 * Nothing else, apart from hidden files and directories (names starting with
   `.`, e.g. `.gitignore` and `.gitlab-ci.yml`).
 

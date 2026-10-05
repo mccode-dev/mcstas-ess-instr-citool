@@ -92,6 +92,7 @@ def test_stray_file(copy_example):
 def test_root_allowed_entries(copy_example):
     d = copy_example("ExInstrBasic")
     for f in ["README.md", "README", "TODO", "LICENSE", "CHANGELOG.md",
+              "CONTRIBUTING.md",
               ".gitignore", ".gitlab-ci.yml", "backup~"]:
         (d / f).touch()
     for sub in ["extra", "extra_pytests", ".github", "__pycache__"]:

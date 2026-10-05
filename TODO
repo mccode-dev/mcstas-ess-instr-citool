@@ -17,6 +17,13 @@ TODO items for mcstas-ess-instr-citool
   required), add_test(..., parameters={...}) could be used instead, in
   mcstas-pygen and in the ExPyHelpers and ExPyExtra examples.
 
+* Top-level files: CONTRIBUTING* is allowed (like README*, TODO*, LICENSE*
+  and CHANGELOG*), since the ESS instrument template had a CONTRIBUTING.md
+  with the contacts of the project (IDS, instrument team, McStas
+  developers). Decide whether such files should be required in general,
+  e.g. a CONTRIBUTING.md with the contacts, or a LICENSE (the template's is
+  still a placeholder).
+
 * localdata/: Consider a size limit (or a policy for large files, e.g. Git
   LFS) for data files. In the surveyed instrument repositories, the largest
   data file is a 38 MB .hkl file (MAGiC).

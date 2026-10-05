@@ -24,7 +24,8 @@ def _instrument_name(path: str) -> str | None:
 # Directories and files allowed at the top level of a project (in addition to
 # hidden files like .gitignore or .gitlab-ci.yml, which are ignored):
 ROOT_DIRS = ("instr", "instrpy", "extra", "extra_pytests")
-ROOT_FILE_PATTERNS = ("conda.yml", "README*", "TODO*", "LICENSE*", "CHANGELOG*")
+ROOT_FILE_PATTERNS = ("conda.yml", "README*", "TODO*", "LICENSE*", "CHANGELOG*",
+                      "CONTRIBUTING*")
 
 def check_root_entries(project_dir: str) -> None:
     """Raise ValueError if the top level of the project contains anything
@@ -75,8 +76,8 @@ def enforce_instr_layout(project_dir: str) -> dict:
     The top level of project_dir may only contain conda.yml, the instr/ or
     instrpy/ directory, the optional directories extra/ (anything, with no
     rules) and extra_pytests/ (tests run with pytest), and files named
-    README*, TODO*, LICENSE* or CHANGELOG*. If extra_pytests/ exists, pytest
-    must be listed in conda.yml.
+    README*, TODO*, LICENSE*, CHANGELOG* or CONTRIBUTING*. If extra_pytests/
+    exists, pytest must be listed in conda.yml.
 
     Hidden files (names starting with '.') and backup files (names ending
     with '~') are ignored.
