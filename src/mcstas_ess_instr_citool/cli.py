@@ -35,12 +35,12 @@ def mpi_value(value):
             f'invalid value {value!r} (must be a positive integer or "auto")')
     return n
 
-def parse_args(argv=None,prog=None):
-    if argv is None:
-        import sys
-        argv = sys.argv[1:]
-
-    parser = argparse.ArgumentParser(prog=prog)
+def make_parser(prog=None):
+    """The argument parser (also used for the documentation)."""
+    parser = argparse.ArgumentParser(
+        prog=prog,
+        description=('Validate ESS instrument simulation projects, and run'
+                     ' their instruments through McStas\' mctest in CI.'))
 
     from . import version
     parser.add_argument('--version', action='version',
@@ -83,6 +83,12 @@ def parse_args(argv=None,prog=None):
                               ' Only for testing locally: not allowed in CI'
                               ' (when the CI environment variable is set).'))
 
+    return parser
+
+def parse_args(argv=None,prog=None):
+    if argv is None:
+        argv = sys.argv[1:]
+    parser = make_parser(prog)
     args = parser.parse_args(argv)
     if args.lenient and os.environ.get('CI'):
         parser.error('--lenient is not allowed in CI (the CI environment'

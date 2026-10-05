@@ -12,6 +12,8 @@ Contents:
 * `src/mcstas_ess_instr_citool/`: the validation and CI tool.
 * `example_repos/`: example instrument projects (see below).
 * `tests/`: tests of the tool (run with `pytest`).
+* `doc/`: the documentation of the tool (see
+  [Documentation](#documentation)).
 * `TODO`: known open issues.
 
 ## Instrument project layout
@@ -361,4 +363,25 @@ uploaded to PyPI for `vX.Y.Z` tags, and only when the repository variable
 be configured for the project on PyPI (with this repository and the workflow
 `pypi.yml`), see the
 [PyPI documentation](https://docs.pypi.org/trusted-publishers/).
+
+## Documentation
+
+The documentation in `doc/` (Markdown, with
+[MyST](https://myst-parser.readthedocs.io/)) is built with
+[Sphinx](https://www.sphinx-doc.org/). It covers the same topics as this
+README, plus a command line reference and the list of instrument
+repositories, which are generated from the tool (so it must be installed):
+
+```
+pip install . -r doc/requirements.txt
+make -C doc html
+```
+
+The workflow `.github/workflows/doc.yml` builds the documentation (treating
+warnings as errors) and checks its links for every push and pull request.
+The workflow `publish-doc.yml` publishes it on GitHub Pages
+(<https://tkittel.github.io/dmsc-instr-repo-prototype/>), for pushes to
+`main` and version tags, when the repository variable `PUBLISH_DOC` is set
+to `true` (and GitHub Pages is enabled in the repository settings, with
+"GitHub Actions" as the source).
 

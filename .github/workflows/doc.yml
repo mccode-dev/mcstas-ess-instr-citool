@@ -1,0 +1,34 @@
+name: Documentation
+
+# Builds the documentation (warnings are errors) and checks its links. The
+# documentation is published by publish-doc.yml.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # For the version of the tool (from the git tags):
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install the tool and the documentation requirements
+        run: python -m pip install . -r doc/requirements.txt
+      - name: Build documentation
+        run: make -C doc html SPHINXOPTS="-W --keep-going"
+      - name: Check links
+        run: make -C doc linkcheck

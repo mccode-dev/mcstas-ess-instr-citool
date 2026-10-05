@@ -1,0 +1,51 @@
+name: Publish documentation
+
+# Builds the documentation and publishes it on GitHub Pages, for pushes to
+# main and version tags (vX.Y.Z). This is only done when the repository
+# variable PUBLISH_DOC is "true", which requires that GitHub Pages is
+# enabled in the repository settings, with "GitHub Actions" as the source.
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, but do not cancel a deployment in
+# progress:
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    name: Build and publish documentation
+    if: vars.PUBLISH_DOC == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # For the version of the tool (from the git tags):
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install the tool and the documentation requirements
+        run: python -m pip install . -r doc/requirements.txt
+      - name: Build documentation
+        run: make -C doc html SPHINXOPTS="-W --keep-going"
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: doc/build/html
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

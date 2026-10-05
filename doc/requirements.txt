@@ -1,0 +1,6 @@
+# Requirements for building the documentation (in addition to the tool
+# itself, which must be installed, e.g. with "pip install ."):
+sphinx >= 7.2
+myst-parser >= 2.0
+sphinx-rtd-theme >= 2.0
+sphinx-argparse >= 0.4
