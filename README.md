@@ -232,6 +232,9 @@ failing with an error message on any violation. Available actions:
   removed from the output, so it is reproducible. The generated `make()`
   writes the instrument into McStasScript's default `input_path` (the working
   directory), not into the python package.
+* `repos`, `repos-json`: list the instrument repositories at DMSC (see
+  [below](#instrument-repositories-at-dmsc)), as a table or as JSON. These
+  actions take no `PROJECT_DIR`.
 * `runci`: check that local components do not shadow McStas components, and
   that local data files do not have the names of McStas data files or
   NCrystal standard library materials, then
@@ -296,6 +299,25 @@ runci:
 
 The micromamba files are kept in the hidden `.micromamba/` directory, since
 other files are not allowed at the top level of the repository.
+
+## Instrument repositories at DMSC
+
+The tool contains a database of the instrument repositories at DMSC (in the
+GitLab group [dmsc-instrumentmodels](https://git.esss.dk/dmsc-instrumentmodels)),
+in `src/mcstas_ess_instr_citool/repodb.py`, which
+`mcstas-ess-instr-citool -a repos` lists. For each repository, it records
+whether its default branch follows the standard layout, and whether it is
+public.
+
+The workflow `.github/workflows/instrument-repos.yml` tests these
+repositories with the current version of the tool (for pushes to `main`,
+weekly, and when started manually). Repositories which follow the standard
+layout are tested like their own CI does (`runci` in the conda environment
+from their `conda.yml`), and must pass. For the others, the result of the
+layout check is only reported, with a warning if one of them passes it (then
+`standard_layout` should be set to `True` in the database). Repositories
+which are not public are skipped, unless the repository secret
+`DMSC_GITLAB_TOKEN` holds a GitLab access token which can read them.
 
 ## Tests
 

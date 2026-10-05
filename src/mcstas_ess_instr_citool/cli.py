@@ -4,7 +4,10 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-ACTIONS = ["generate", "generatepy", "runci", "list", "check", "json", "pprint"]
+ACTIONS = ["generate", "generatepy", "runci", "list", "check", "json", "pprint",
+           "repos", "repos-json"]
+# Actions which do not need a project directory:
+NO_PROJECT_ACTIONS = ["repos", "repos-json"]
 DEFAULT_ACTION = "list"
 
 assert DEFAULT_ACTION in ACTIONS
@@ -45,8 +48,9 @@ def parse_args(argv=None,prog=None):
                         help='Show the version of the tool and exit.')
 
     parser.add_argument(
-        "project_dir",
-        help='Path to a directory containing a "project".',
+        "project_dir", nargs="?", default=None,
+        help=('Path to a directory containing a "project" (not needed for'
+              f' the actions {NO_PROJECT_ACTIONS}).'),
     )
 
     parser.add_argument(
@@ -55,7 +59,9 @@ def parse_args(argv=None,prog=None):
         dest="action",
         choices=ACTIONS,
         default=DEFAULT_ACTION,
-        help=f'Action: {ACTIONS} (default: "{DEFAULT_ACTION}").',
+        help=(f'Action: {ACTIONS} (default: "{DEFAULT_ACTION}"). The actions'
+              ' "repos" and "repos-json" list the instrument repositories at'
+              ' DMSC (as a table, or as JSON).'),
     )
 
     parser.add_argument('--outdir','-o', type=output_dir, metavar='DIR',
@@ -85,7 +91,13 @@ def parse_args(argv=None,prog=None):
         parser.error('--mpi can only be used with action runci')
     if args.action == 'generatepy' and args.outdir is None:
         parser.error('--outdir is required for action generatepy')
-    args.project_dir = Path(args.project_dir)
+    if args.action in NO_PROJECT_ACTIONS:
+        if args.project_dir is not None:
+            parser.error(f'action {args.action} does not take a project directory')
+    else:
+        if args.project_dir is None:
+            parser.error(f'action {args.action} needs a project directory')
+        args.project_dir = Path(args.project_dir)
     return args
 
 class OutDirMgr:
@@ -119,6 +131,16 @@ class OutDirMgr:
 
 def main( argv = None ):
     args = parse_args(argv)
+    if args.action == 'repos':
+        from .repodb import print_table
+        print_table()
+        return
+    if args.action == 'repos-json':
+        import json
+
+        from .repodb import repos
+        print(json.dumps(repos()))
+        return
     from .analyse import analyse_dir
     info = analyse_dir( args.project_dir, lenient = args.lenient )
 

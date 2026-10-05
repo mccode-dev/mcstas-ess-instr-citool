@@ -150,3 +150,37 @@ def test_version(capsys):
     out = capsys.readouterr().out.strip()
     assert out.endswith(f" {version()}")
     assert version() != "unversioned_local_source"
+
+
+def test_repos(capsys):
+    main(["-a", "repos"])
+    out = capsys.readouterr().out.splitlines()
+    assert out[0].split() == ["Name", "Description", "Standard", "layout",
+                              "Public", "URL"]
+    assert any(line.startswith("SKADI ") and
+               "https://git.esss.dk/dmsc-instrumentmodels/skadi" in line
+               for line in out)
+
+
+def test_repos_json(capsys):
+    from mcstas_ess_instr_citool.repodb import REPOS
+    main(["-a", "repos-json"])
+    repos = json.loads(capsys.readouterr().out)
+    assert len(repos) == len(REPOS)
+    for r in repos:
+        assert set(r) == {"name", "repo", "description", "standard_layout",
+                          "public", "url"}
+        assert r["url"] == ("https://git.esss.dk/dmsc-instrumentmodels/"
+                            + r["repo"])
+    assert len({r["repo"] for r in repos}) == len(repos)
+
+
+@pytest.mark.parametrize("argv,msg", [
+    (["-a", "repos", "somedir"], "does not take a project directory"),
+    (["-a", "check"], "needs a project directory"),
+    ([], "needs a project directory"),
+])
+def test_project_dir_needed_or_not(argv, msg, capsys):
+    with pytest.raises(SystemExit):
+        main(argv)
+    assert msg in capsys.readouterr().err

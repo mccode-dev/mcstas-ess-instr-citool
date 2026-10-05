@@ -1,0 +1,115 @@
+name: Instrument repositories
+
+# Tests the instrument repositories at DMSC (the database in
+# src/mcstas_ess_instr_citool/repodb.py) with the current version of the
+# tool: those whose default branch follows the standard layout must pass
+# "runci", for the others the result of "check" is only reported.
+#
+# Repositories which are not public can only be tested if the repository
+# secret DMSC_GITLAB_TOKEN holds a GitLab access token (with read_repository
+# access to them); otherwise they are skipped.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1" # Mondays at 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: instrument-repos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  list:
+    name: List the repositories
+    runs-on: ubuntu-latest
+    outputs:
+      repos: ${{ steps.list.outputs.repos }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install the tool
+        run: python -m pip install --no-deps .
+      - id: list
+        run: |
+          mcstas-ess-instr-citool -a repos
+          echo "repos=$(mcstas-ess-instr-citool -a repos-json)" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: ${{ matrix.repo.name }}
+    needs: list
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJSON(needs.list.outputs.repos) }}
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      REPO_URL: ${{ matrix.repo.url }}
+      REPO_PUBLIC: ${{ matrix.repo.public }}
+      GITLAB_TOKEN: ${{ secrets.DMSC_GITLAB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: tool
+          # For the version of the tool (from the git tags):
+          fetch-depth: 0
+      - name: Clone ${{ matrix.repo.url }}
+        id: clone
+        run: |
+          url="$REPO_URL"
+          if [ "$REPO_PUBLIC" != "true" ]; then
+            if [ -z "$GITLAB_TOKEN" ]; then
+              echo "::notice::Skipping ${{ matrix.repo.name }}: the repository is not public, and the secret DMSC_GITLAB_TOKEN is not set."
+              echo "cloned=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            url="https://oauth2:${GITLAB_TOKEN}@${REPO_URL#https://}"
+          fi
+          git clone --depth 1 "$url.git" repo
+          git -C repo log -1 --format='Testing commit %h (%cd): %s'
+          echo "cloned=true" >> "$GITHUB_OUTPUT"
+
+      # Standard layout: test as the CI of the repository does, in the conda
+      # environment from its conda.yml (with this version of the tool):
+      - uses: mamba-org/setup-micromamba@v3
+        if: steps.clone.outputs.cloned == 'true' && matrix.repo.standard_layout
+        with:
+          environment-file: repo/conda.yml
+          environment-name: instrument
+      - name: Install the tool
+        if: steps.clone.outputs.cloned == 'true' && matrix.repo.standard_layout
+        run: |
+          python -m pip install --no-deps ./tool
+          mcstas-ess-instr-citool --version
+      - name: Check the layout
+        if: steps.clone.outputs.cloned == 'true' && matrix.repo.standard_layout
+        run: mcstas-ess-instr-citool -a check repo
+      - name: Run the tests (runci)
+        if: steps.clone.outputs.cloned == 'true' && matrix.repo.standard_layout
+        run: mcstas-ess-instr-citool -a runci repo
+
+      # Not (yet) moved to the standard layout: only report the result of
+      # the layout check:
+      - uses: actions/setup-python@v7
+        if: steps.clone.outputs.cloned == 'true' && !matrix.repo.standard_layout
+        with:
+          python-version: "3.14"
+      - name: Check the layout (not expected to pass)
+        if: steps.clone.outputs.cloned == 'true' && !matrix.repo.standard_layout
+        shell: bash
+        run: |
+          python -m pip install --no-deps ./tool
+          if mcstas-ess-instr-citool -a check repo; then
+            echo "::warning::${{ matrix.repo.name }} now passes the layout check: please set standard_layout to True in src/mcstas_ess_instr_citool/repodb.py."
+          else
+            echo "::notice::${{ matrix.repo.name }} does not follow the standard layout (yet), as expected."
+          fi
