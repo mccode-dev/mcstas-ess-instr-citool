@@ -3,22 +3,13 @@ import shlex
 import subprocess
 
 
-def mctest_supports_noplots( mctest_cmd ):
-    """Whether mctest has the option --noplots (added in
-    https://github.com/mccode-dev/McCode/pull/2734, not in McStas 3.8.8)."""
-    o = subprocess.run( [ mctest_cmd, '--help' ], check = False,
-                        capture_output = True, text = True )
-    return '--noplots' in o.stdout
-
-def mctest_args( instrdir, testdir, mpi = None, noplots = False ):
+def mctest_args( instrdir, testdir, mpi = None ):
     """Arguments for mctest. If mpi is an integer or "auto" (meaning the
     number of available processors), the instruments are compiled and run
-    with MPI, using that number of processes. With noplots, mctest does not
+    with MPI, using that number of processes. With --noplots, mctest does not
     plot the test output (which can take long for instruments with many
     monitors, and is not looked at)."""
-    cmd = [ '--strict' ]
-    if noplots:
-        cmd += [ '--noplots' ]
+    cmd = [ '--strict', '--noplots' ]
     if mpi is not None:
         if mpi == 'auto':
             from .util import get_nprocs
@@ -36,8 +27,7 @@ def runtest( info, outdir, mpi = None ):
     check_local_data( info )
     instrdir = generate( info, outdir )
     testdir = outdir.joinpath('tests').absolute().resolve()
-    cmd = mctest_args( instrdir, testdir, mpi,
-                       noplots = mctest_supports_noplots( mctest_cmd ) )
+    cmd = mctest_args( instrdir, testdir, mpi )
     print(f"Launching: mctest {shlex.join(cmd)}", flush=True)
     ec = subprocess.run( [ mctest_cmd ] + cmd,
                          check = False, capture_output = False )

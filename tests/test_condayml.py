@@ -28,7 +28,7 @@ def check_fails(tmp_path, deps, match, **kwargs):
 
 
 BASE = """\
-  - mcstas >= 3.8.8
+  - mcstas >= 3.9.0
   - python
   - pip
 """
@@ -38,7 +38,7 @@ BASE = """\
 def test_examples_valid(example):
     res = validate_conda_requirements(EXAMPLES_DIR / example / "conda.yml")
     assert {"name": "mcstas", "source": "conda",
-            "requirement": ">=3.8.8"} in res
+            "requirement": ">=3.9.0"} in res
 
 
 def test_minimal_valid(tmp_path):
@@ -77,7 +77,7 @@ def test_unsupported_key(tmp_path):
 
 
 def test_missing_mandatory(tmp_path):
-    check_fails(tmp_path, "  - mcstas >= 3.8.8\n  - python\n",
+    check_fails(tmp_path, "  - mcstas >= 3.9.0\n  - python\n",
                 "missing mandatory conda dependency.*'pip'")
 
 
@@ -126,11 +126,12 @@ def test_bare_conda_version_allowed_when_pinning_allowed(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("spec,ok", [
-    ("mcstas >= 3.8.8", True),
+    ("mcstas >= 3.9.0", True),
     ("mcstas >= 3.9", True),
     ("mcstas>=4.0.1", True),
-    ("mcstas > 3.8.8", True),
-    ("mcstas >= 3.8.7", False),
+    ("mcstas > 3.9.0", True),
+    ("mcstas >= 3.8.8", False),
+    ("mcstas > 3.8.8", False),
     ("mcstas >= 3.7.22", False),
     ("mcstas", False),
 ])
@@ -139,11 +140,11 @@ def test_mcstas_lower_bound(tmp_path, spec, ok):
     if ok:
         check(tmp_path, deps)
     else:
-        check_fails(tmp_path, deps, "explicit lower bound of at least 3.8.8")
+        check_fails(tmp_path, deps, "explicit lower bound of at least 3.9.0")
 
 
 def test_mcstas_unparsable_bound(tmp_path):
-    check_fails(tmp_path, "  - mcstas >= 3.8.8a\n  - python\n  - pip\n",
+    check_fails(tmp_path, "  - mcstas >= 3.9.0a\n  - python\n  - pip\n",
                 "could not parse version")
 
 
@@ -172,7 +173,7 @@ def test_pip_conda_conflict_normalised(tmp_path, monkeypatch):
 
 def test_pip_section_then_more_conda(tmp_path, monkeypatch):
     monkeypatch.setattr(check_condayml, "pip_requirements_allowed", {"foo"})
-    res = check(tmp_path, "  - mcstas >= 3.8.8\n  - pip:\n    - foo\n"
+    res = check(tmp_path, "  - mcstas >= 3.9.0\n  - pip:\n    - foo\n"
                           "  - python\n  - pip\n")
     assert [(r["name"], r["source"]) for r in res] == [
         ("mcstas", "conda"), ("python", "conda"), ("pip", "conda"),

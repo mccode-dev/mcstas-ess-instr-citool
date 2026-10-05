@@ -9,11 +9,19 @@ from pathlib import Path
 # The same regex used by mctest to find %Example lines:
 _EXAMPLE_RE = re.compile(r"\%Example:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)")
 
-_INSTR_CTOR_RE = re.compile(r'(ms\.(?:McStas|McXtrace)_instr\()"[^"]*"')
+_INSTR_CTOR_RE = re.compile(r'ms\.(?:McStas|McXtrace)_instr\("([^"]*)"')
 
-_PARAM_RE = re.compile(r"instr\.add_parameter\('(\w*)', '(\w+)'")
+# The generated make() uses the directory of the script as default
+# input_path, i.e. it would write the instrument into the python package:
+_INPUT_PATH_DEFAULT = """\
+    # Default: the directory of this script
+    if input_path is None:
+        input_path = os.path.dirname(os.path.abspath(__file__))
+"""
 
-_TESTS_ANCHOR = "    # Instruct McStasscript not to 'check everythng'\n"
+# SEARCH statements, as absolute paths of the source project (since the
+# script is not written in the instr/ directory):
+_SEARCH_RE = re.compile(r"    # SEARCH statements\n(    instr\.add_search\([^\n]*\n)+")
 
 
 def generatepy( info, outdir ):
@@ -65,8 +73,6 @@ def _copy_extra_files( info, srcdir, destdir, subdirs = None ):
 def _generate_from_instr( info, outdir ):
     from .util import mcstas_info
     pygen = mcstas_info()['cmd']['mcstas-pygen']
-    pygen_has_name_opt = '--instrument-name' in subprocess.run(
-        [pygen, '--help'], capture_output=True, text=True).stderr
 
     project = info['project_name']
     pkgname = f'{project}_instr'
@@ -79,10 +85,8 @@ def _generate_from_instr( info, outdir ):
         print(f"Generating {path.stem}.py from {path.name}")
         with tempfile.TemporaryDirectory() as tmpdir:
             pyfile = Path(tmpdir) / f'{path.stem}.py'
-            cmd = [pygen]
-            if pygen_has_name_opt:
-                cmd += ['--instrument-name', path.stem]
-            cmd += ['-o', str(pyfile), path.name]
+            cmd = [pygen, '--instrument-name', path.stem,
+                   '-o', str(pyfile), path.name]
             # Run in the instr/ dir, so %include "snippets/..." works:
             p = subprocess.run(cmd, cwd=path.parent, capture_output=True,
                                text=True)
@@ -112,27 +116,29 @@ def _generate_from_instr( info, outdir ):
 
 
 def postprocess_pygen_output( code, name, instr_text ):
-    """Post-process output from mcstas-pygen: Set the instrument name, add
-    tests corresponding to %Example lines (unless mcstas-pygen already did
-    it), and remove non-reproducible information like dates and local paths
-    from comments."""
-    # Instrument name (needed when mcstas-pygen does not support the
-    # --instrument-name option, like in McStas 3.8.8):
-    code, n = _INSTR_CTOR_RE.subn(rf'\g<1>"{name}"', code)
-    if n != 1:
-        raise RuntimeError('Could not find instrument creation in output'
-                           ' of mcstas-pygen')
+    """Post-process output from mcstas-pygen: Check the instrument name and
+    the tests corresponding to %Example lines, remove the default input_path
+    and the SEARCH statements (which are replaced by add_local_files_code),
+    and remove non-reproducible information like dates and local paths from
+    comments."""
+    names = _INSTR_CTOR_RE.findall(code)
+    if names != [name]:
+        raise RuntimeError('Could not find instrument creation with name'
+                           f' "{name}" in output of mcstas-pygen')
 
-    # Tests (needed when mcstas-pygen does not translate %Example lines,
-    # like in McStas 3.8.8):
-    examples = _EXAMPLE_RE.findall(instr_text)
-    if 'instr.add_test(' not in code and examples:
-        code = _add_tests( code, examples )
     ntests = code.count('instr.add_test(')
-    if ntests != len(examples):
+    nexamples = len(_EXAMPLE_RE.findall(instr_text))
+    if ntests != nexamples:
         raise RuntimeError(f'Could not translate all %Example lines in {name}'
-                           f' into tests ({len(examples)} lines, but'
+                           f' into tests ({nexamples} lines, but'
                            f' {ntests} tests)')
+
+    # Use the input_path of McStasScript by default (the working directory),
+    # so the instrument is not written into the python package:
+    code = code.replace(_INPUT_PATH_DEFAULT, '')
+    code = _SEARCH_RE.sub('', code)
+    if 'os.' not in code:
+        code = code.replace('import os\n', '')
 
     # Reproducible output:
     lines = []
@@ -185,7 +191,8 @@ _LOCALDATA_CODE = """\
 def add_local_files_code( code, localcomps, localdata ):
     """Add code to generated instrument code, which makes the files in
     localcomps/ and localdata/ in the python package available to the
-    instrument (mcstas-pygen drops the SEARCH statements of the .instr)."""
+    instrument (replacing the SEARCH statements of the .instr, which
+    mcstas-pygen writes as absolute paths of the source project)."""
     block = ''
     if localcomps:
         code = _add_import( code, 'pathlib' )
@@ -225,77 +232,6 @@ def _insert_after_dependency_line( code, block, after_blocks = False ):
             pos += 1
     lines.insert(pos, block)
     return ''.join(lines)
-
-
-def _add_tests( code, examples ):
-    """Add McStasScript tests to generated code, in exactly the same way as
-    newer versions of mcstas-pygen do it (except that problems are errors
-    rather than warnings)."""
-    partypes = dict((n, t) for t, n in _PARAM_RE.findall(code))
-    testcode = []
-    for parvals, monitor, value in examples:
-        monitor = monitor.strip()
-        value = value.strip()
-        if not monitor.isidentifier() or not _is_number(value):
-            raise RuntimeError('Invalid monitor name or value in %Example'
-                               f' line: {parvals}Detector:{monitor}_I={value}')
-        setpars, inclpars = [], []
-        for tok in parvals.split():
-            parname, eq, parval = tok.partition('=')
-            if not eq or not parname:
-                raise RuntimeError(f'Invalid parameter setting "{tok}" in'
-                                   ' %Example line')
-            if parname not in partypes:
-                raise RuntimeError(f'Unknown instrument parameter "{parname}"'
-                                   ' in %Example line')
-            if partypes[parname] == 'string':
-                if ( len(parval) >= 2 and parval[0] in '"\''
-                     and parval[-1] == parval[0] ):
-                    parval = parval[1:-1]
-                if any(c in parval for c in '"\'\\'):
-                    raise RuntimeError('Unsupported string value for'
-                                       f' parameter "{parname}" in'
-                                       ' %Example line')
-                # Without the double quotes usually needed for McStasScript
-                # string parameter values, since add_test would otherwise put
-                # them in the %Example line (parameters are restored before
-                # the instrument is used):
-                setpars.append(f"'{parname}': '{parval}'")
-            elif partypes[parname] in ('int', 'double'):
-                if not _is_number(parval):
-                    raise RuntimeError('Non-numeric value for parameter'
-                                       f' "{parname}" in %Example line')
-                setpars.append(f"'{parname}': {parval}")
-            else:
-                raise RuntimeError(f'Parameter "{parname}" of unsupported'
-                                   ' type in %Example line')
-            inclpars.append(f"'{parname}'")
-        if setpars:
-            testcode.append(f"    instr.set_parameters({{{', '.join(setpars)}}})\n")
-        testcode.append(f"    instr.add_test('{monitor}', intensity={value},"
-                        f" included_pars=[{', '.join(inclpars)}])\n")
-
-    block = [ "    # Tests corresponding to the %Example lines of the instrument. The\n",
-              "    # parameter values are restored afterwards, since add_test uses the\n",
-              "    # current parameter values:\n",
-              "    _parameter_values = {p: instr.parameters[p].value"
-              " for p in instr.get_parameter_names()}\n" ]
-    block += testcode
-    block += [ "    instr.set_parameters(_parameter_values)\n", "\n" ]
-
-    anchor = _TESTS_ANCHOR if _TESTS_ANCHOR in code else "    return instr\n"
-    if code.count(anchor) != 1:
-        raise RuntimeError('Could not find where to add tests in output of'
-                           ' mcstas-pygen')
-    return code.replace(anchor, ''.join(block) + anchor)
-
-
-def _is_number( s ):
-    try:
-        float(s)
-    except ValueError:
-        return False
-    return True
 
 
 def _pyproject_toml( project, pkgname, datadirs ):

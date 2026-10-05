@@ -18,7 +18,7 @@ minimal_requirements = {
 # Conda packages for which exact versions, upper bounds, or other
 # non-lower-bound constraints are allowed.
 #
-# Lower bounds such as "mcstas >= 3.8.8" are allowed for every package.
+# Lower bounds such as "mcstas >= 3.9.0" are allowed for every package.
 conda_pinning_allowed = set({
     "nosuchpkgyet",
 })
@@ -80,6 +80,14 @@ def _version_tuple(version: str) -> tuple[int, ...] | None:
     if not all(part.isdigit() for part in parts):
         return None
     return tuple(int(part) for part in parts)
+
+
+def _version_at_least(version: tuple[int, ...],
+                      minimum: tuple[int, ...]) -> bool:
+    """Compare versions, padded with zeros (so e.g. 3.9 means 3.9.0)."""
+    n = max(len(version), len(minimum))
+    return ( version + (0,) * (n - len(version))
+             >= minimum + (0,) * (n - len(minimum)) )
 
 
 def _runtime_error(path: Path, message: str) -> RuntimeError:
@@ -579,7 +587,7 @@ def validate_conda_requirements(
             {
                 "name": "mcstas",
                 "source": "conda",
-                "requirement": ">=3.8.8",
+                "requirement": ">=3.9.0",
             },
             {
                 "name": "pip",
@@ -873,7 +881,7 @@ def validate_conda_requirements(
 def _validate_mcstas_lower_bound(path: Path, conda_specs: list[str]) -> None:
     """
     The mcstas dependency must have an explicit lower bound of at least
-    minimum_mcstas_version, e.g. "mcstas >= 3.8.8".
+    minimum_mcstas_version, e.g. "mcstas >= 3.9.0".
     """
     min_str = ".".join(str(i) for i in minimum_mcstas_version)
     for raw_spec in conda_specs:
@@ -890,7 +898,7 @@ def _validate_mcstas_lower_bound(path: Path, conda_specs: list[str]) -> None:
                     f"invalid mcstas dependency {raw_spec!r}: could not "
                     f"parse version {version!r} (expected e.g. {min_str!r}).",
                 )
-            if version_tuple >= minimum_mcstas_version:
+            if _version_at_least(version_tuple, minimum_mcstas_version):
                 return
         raise _runtime_error(
             path,

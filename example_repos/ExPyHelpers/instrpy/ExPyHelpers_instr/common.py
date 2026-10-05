@@ -52,12 +52,10 @@ def add_example(instr, monitor, intensity, **parameters):
     without changing the parameter defaults of the instrument (add_test uses
     the current parameter values, so they are set and restored here).
 
-    If no parameter values are given, the %Example line lists all parameters
-    with their default values. (A %Example line without any parameters does
-    not work with mctest, since the instrument then asks for the parameter
-    values interactively.)"""
+    If no parameter values are given, the %Example line has no parameters,
+    i.e. the test uses the default values."""
     saved = {p: instr.parameters[p].value for p in instr.get_parameter_names()}
     instr.set_parameters(parameters)
     instr.add_test(monitor, intensity=intensity,
-                   included_pars=list(parameters) or None)
+                   included_pars=list(parameters))
     instr.set_parameters(saved)

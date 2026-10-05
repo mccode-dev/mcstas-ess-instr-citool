@@ -1,6 +1,6 @@
 import subprocess
 
-minimum_mcstas_version = (3,8,8)
+minimum_mcstas_version = (3,9,0)
 minimum_mcstasscript_version = (0,0,94)
 
 _cache = [None]

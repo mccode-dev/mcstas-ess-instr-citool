@@ -105,11 +105,8 @@ def test_mctest_args():
     from mcstas_ess_instr_citool.runtest import mctest_args
     from mcstas_ess_instr_citool.util import get_nprocs
     base = ["--local", "INSTR", "--testdir", "TESTS"]
-    assert mctest_args("INSTR", "TESTS") == ["--strict"] + base
-    assert mctest_args("INSTR", "TESTS", 3) == ["--strict", "--mpi", "3"] + base
-    assert mctest_args("INSTR", "TESTS", "auto") == [
-        "--strict", "--mpi", str(get_nprocs())] + base
-    assert mctest_args("INSTR", "TESTS", noplots=True) == [
-        "--strict", "--noplots"] + base
-    assert mctest_args("INSTR", "TESTS", 3, noplots=True) == [
+    assert mctest_args("INSTR", "TESTS") == ["--strict", "--noplots"] + base
+    assert mctest_args("INSTR", "TESTS", 3) == [
         "--strict", "--noplots", "--mpi", "3"] + base
+    assert mctest_args("INSTR", "TESTS", "auto") == [
+        "--strict", "--noplots", "--mpi", str(get_nprocs())] + base
