@@ -11,7 +11,7 @@ TODO items for mcstas-ess-instr-citool
   plots of all monitors), which nobody looks at in CI, and which can take much
   longer than the tests (about 14 of 15 minutes for the HEIMDAL model). The
   tool passes --noplots to mctest when mctest supports it (added in
-  https://github.com/mccode-dev/McCode/pull/2734, not yet released). Once a
+  https://github.com/mccode-dev/McCode/pull/2734, in McStas 3.9.0). Once a
   McStas release with it is required, always pass it.
 
 * runci: The JSON test results produced by mctest are only used to check for
@@ -22,7 +22,7 @@ TODO items for mcstas-ess-instr-citool
 * generatepy: The instrument renaming and the translation of %Example lines
   into McStasScript tests are done by the tool when mcstas-pygen does not
   support this (McStas 3.8.8). These features were added to mcstas-pygen in
-  https://github.com/mccode-dev/McCode/pull/2707 (merged, not yet released).
+  https://github.com/mccode-dev/McCode/pull/2707 (in McStas 3.9.0).
   Once a McStas release with them is required, remove the workarounds in
   generatepy.py. The generated test code (like that of mcstas-pygen) sets and
   restores the instrument parameters around add_test calls. With McStasScript
@@ -31,7 +31,7 @@ TODO items for mcstas-ess-instr-citool
 
 * %Example lines without any parameters fail in mctest (the instrument then
   asks for the parameter values interactively). This is fixed in mctest by
-  https://github.com/mccode-dev/McCode/pull/2708 (merged, not yet released),
+  https://github.com/mccode-dev/McCode/pull/2708 (in McStas 3.9.0),
   which passes -y for such lines. Until a McStas release with this fix is
   required, such lines must list at least one parameter (as done by
   add_example in the ExPyHelpers example).
@@ -54,8 +54,8 @@ TODO items for mcstas-ess-instr-citool
 
 * mcstas-pygen drops SEARCH statements, so generatepy adds
   instr.add_search() for localcomps/ itself. A fix is proposed in
-  https://github.com/mccode-dev/McCode/pull/2718 (merged, not yet
-  released): mcstas-pygen
+  https://github.com/mccode-dev/McCode/pull/2718 (in McStas
+  3.9.0): mcstas-pygen
   translates SEARCH statements into instr.add_search() calls (relative paths
   relative to the generated script), and the generated make() uses the
   directory of the script as default input_path. Once a McStas release with it
@@ -66,7 +66,7 @@ TODO items for mcstas-ess-instr-citool
   "localdata/X.ncmat") only relative to the working directory, unlike McStas
   components using read_table-lib, which also look relative to the .instr
   file. This is fixed by https://github.com/mccode-dev/McCode/pull/2714
-  (merged, not yet released): the NCrystal components, PowderN and
+  (in McStas 3.9.0): the NCrystal components, PowderN and
   Single_crystal add the same directories to the NCrystal search path as
   McStas's Open_File() searches. Once released, update the README
   (instruments using NCrystal then also work when not run from their own
@@ -95,6 +95,9 @@ TODO items for mcstas-ess-instr-citool
   data directories). Propose upstream that such components get a parameter
   for the location of the files.
 
-* Instrument repositories at git.esss.dk/dmsc-instrumentmodels: TBL, FREIA
-  and ODIN have been converted to the standard layout (standard-layout
-  branches, with GitLab CI running runci). Convert the remaining ones.
+* Instrument repositories at git.esss.dk/dmsc-instrumentmodels: TBL and SKADI
+  use the standard layout, and standard-layout branches exist for FREIA,
+  ODIN, HEIMDAL, NMX, BEER, LOKI, ESTIA, MAGiC and the ESS instrument
+  template (T-REX is not converted). All of them pass runci with McStas 3.9.0
+  (5 October 2026; SKADI needs the switch to the McStas scintillator logger
+  component).
