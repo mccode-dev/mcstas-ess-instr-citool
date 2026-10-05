@@ -4,8 +4,8 @@ from pathlib import Path
 from .enforce_layout import enforce_instr_layout
 
 
-def analyse_dir( project_dir ):
-    info = enforce_instr_layout(project_dir)
+def analyse_dir( project_dir, lenient = False ):
+    info = enforce_instr_layout(project_dir, lenient = lenient)
     merged_modes = {'MAIN':info['main']['path']}
     merged_modes.update(dict(sorted( (m['mode'],m['path'])
                                      for m in info['modes'] )))

@@ -86,7 +86,7 @@ def test_stray_file(copy_example):
     d = copy_example("ExInstrIncludes")
     (d / "instr" / "README.md").touch()
     fails(d, r"Unexpected file 'README.md'.*in addition to subdirs: "
-             r"includes snippets localcomps localdata\.$")
+             r"includes snippets localcomps localdata\. To ignore")
 
 
 def test_root_allowed_entries(copy_example):
@@ -143,8 +143,8 @@ def test_stray_file_instrpy_msg(copy_example):
     with pytest.raises(ValueError) as e:
         analyse_dir(d)
     assert "Unexpected file 'README.md'" in str(e.value)
-    assert str(e.value).endswith(
-        "in addition to subdirs: includes localcomps localdata.")
+    assert ("in addition to subdirs: includes localcomps localdata. To ignore"
+            in str(e.value))
 
 
 def test_file_named_like_subdir(copy_example):
@@ -407,3 +407,72 @@ def test_ncrystal_stdlib_file_names():
     names = ncrystal_stdlib_file_names()
     assert "Al_sg225.ncmat" in names
     assert all(n.endswith(".ncmat") for n in names)
+
+
+def _add_junk_instr(d):
+    """Temporary files as left by working in a copy of an instr project."""
+    instr = d / "instr"
+    (d / "notes.txt").touch()                        # top level
+    (d / "scratch").mkdir()                          # top level
+    (instr / "ExInstrLocalFiles_main.c").touch()     # compiled by mcrun
+    (instr / "ExInstrLocalFiles_main.out").touch()
+    (instr / "ExInstrLocalFiles_main_20261006_1").mkdir()  # mcrun output
+    (instr / "localdata" / "results.h5").touch()     # type not allowed
+    (instr / "localcomps" / "old").mkdir()           # nested subdir
+    return [str(p) for p in [
+        d / "notes.txt", d / "scratch",
+        instr / "ExInstrLocalFiles_main.c",
+        instr / "ExInstrLocalFiles_main.out",
+        instr / "ExInstrLocalFiles_main_20261006_1",
+        instr / "localcomps" / "old",
+        instr / "localdata" / "results.h5",
+    ]]
+
+
+def test_lenient_hint_in_errors(copy_example):
+    d = copy_example("ExInstrBasic")
+    (d / "notes.txt").touch()
+    fails(d, r"Unexpected file or directory 'notes.txt'.*--lenient flag."
+             r" It must not be used in CI\.$")
+
+
+def test_lenient_instr(copy_example):
+    d = copy_example("ExInstrLocalFiles")
+    clean = analyse_dir(d)
+    assert clean["ignored"] == []
+    junk = _add_junk_instr(d)
+    with pytest.raises(ValueError, match="--lenient"):
+        analyse_dir(d)
+    info = analyse_dir(d, lenient=True)
+    assert sorted(info["ignored"]) == sorted(junk)
+    # Apart from the ignored files, the result is as for the clean project:
+    info["ignored"] = []
+    assert info == clean
+
+
+def test_lenient_instrpy(copy_example):
+    d = copy_example("ExPyLocalFiles")
+    clean = analyse_dir(d)
+    pkg = d / "instrpy" / "ExPyLocalFiles_instr"
+    (d / "instrpy" / "ExPyLocalFiles_main.instr").touch()
+    (pkg / "run_folder").mkdir()
+    (pkg / "ExPyLocalFiles_main.instr").touch()
+    (pkg / "localdata" / "plot.png").touch()
+    info = analyse_dir(d, lenient=True)
+    assert sorted(info["ignored"]) == sorted(str(p) for p in [
+        d / "instrpy" / "ExPyLocalFiles_main.instr",
+        pkg / "ExPyLocalFiles_main.instr",
+        pkg / "localdata" / "plot.png",
+        pkg / "run_folder",
+    ])
+    info["ignored"] = []
+    assert info == clean
+
+
+def test_lenient_other_rules_still_apply(copy_example):
+    d = copy_example("ExInstrBasic")
+    (d / "notes.txt").touch()
+    (d / "instr" / "ExInstrBasic_main.instr").rename(
+        d / "instr" / "ExInstrBasic_mainx.instr")
+    with pytest.raises(ValueError, match="Must have exactly one file named"):
+        analyse_dir(d, lenient=True)

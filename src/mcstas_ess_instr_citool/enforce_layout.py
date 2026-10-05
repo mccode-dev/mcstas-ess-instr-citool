@@ -3,6 +3,7 @@ import keyword
 import os
 import pathlib
 import re
+import sys
 import tomllib  # Python 3.11+ only
 
 from .localfiles import subdir_patterns
@@ -21,15 +22,36 @@ def _instrument_name(path: str) -> str | None:
     m = re.search(r"\bDEFINE\s+INSTRUMENT\s+([A-Za-z_]\w*)", text)
     return m.group(1) if m else None
 
+LENIENT_HINT = (" To ignore unexpected files and directories when testing"
+                " locally (e.g. temporary files in a working copy), use the"
+                " --lenient flag. It must not be used in CI.")
+
+class _Unexpected:
+    """Handles unexpected files and directories: an error (mentioning the
+    --lenient flag), or with lenient=True a warning, after which they are
+    ignored (the list of ignored paths is kept in .ignored)."""
+
+    def __init__(self, lenient: bool = False):
+        self.lenient = lenient
+        self.ignored: list[str] = []
+
+    def __call__(self, path: str, msg: str) -> None:
+        if not self.lenient:
+            raise ValueError(msg + LENIENT_HINT)
+        print(f"WARNING: {msg} Ignoring it (--lenient).", file=sys.stderr)
+        self.ignored.append(path)
+
 # Directories and files allowed at the top level of a project (in addition to
 # hidden files like .gitignore or .gitlab-ci.yml, which are ignored):
 ROOT_DIRS = ("instr", "instrpy", "extra", "extra_pytests")
 ROOT_FILE_PATTERNS = ("conda.yml", "README*", "TODO*", "LICENSE*", "CHANGELOG*",
                       "CONTRIBUTING*")
 
-def check_root_entries(project_dir: str) -> None:
+def check_root_entries(project_dir: str, unexpected: _Unexpected | None = None) -> None:
     """Raise ValueError if the top level of the project contains anything
-    else than the allowed directories and files."""
+    else than the allowed directories and files (or ignore them with a
+    warning, if unexpected is lenient)."""
+    unexpected = unexpected or _Unexpected()
     for entry in sorted(os.listdir(project_dir)):
         if _is_ignored(entry) or entry == "__pycache__":
             continue
@@ -41,13 +63,13 @@ def check_root_entries(project_dir: str) -> None:
         if ( os.path.isfile(path)
              and any(fnmatch.fnmatchcase(entry, p) for p in ROOT_FILE_PATTERNS) ):
             continue
-        raise ValueError(
+        unexpected(path,
             f"Unexpected file or directory '{entry}' in '{project_dir}'."
             " Only the directories " + ", ".join(f"{d}/" for d in ROOT_DIRS)
             + " and the files " + ", ".join(ROOT_FILE_PATTERNS)
             + " are allowed (anything else can be placed in extra/).")
 
-def enforce_instr_layout(project_dir: str) -> dict:
+def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
     """
     Enforce one of these layouts under `project_dir`:
 
@@ -80,7 +102,10 @@ def enforce_instr_layout(project_dir: str) -> dict:
     exists, pytest must be listed in conda.yml.
 
     Hidden files (names starting with '.') and backup files (names ending
-    with '~') are ignored.
+    with '~') are ignored. With lenient=True, unexpected files and
+    directories are also ignored (with a warning), and listed in the
+    returned "ignored" entry. This is meant for testing a working copy
+    locally (which may contain temporary files), never for CI.
 
     PROJECTNAME: [A-Za-z][A-Za-z0-9]*
     MODENAME:     [A-Za-z][A-Za-z0-9]*
@@ -101,7 +126,8 @@ def enforce_instr_layout(project_dir: str) -> dict:
     from .check_condayml import validate_conda_requirements
     condareq = validate_conda_requirements(condareqfile)
 
-    check_root_entries(project_dir)
+    unexpected = _Unexpected(lenient)
+    check_root_entries(project_dir, unexpected)
     extra_dir = os.path.join(project_dir, "extra")
     extra_pytests_dir = os.path.join(project_dir, "extra_pytests")
     extras = {
@@ -153,19 +179,24 @@ def enforce_instr_layout(project_dir: str) -> dict:
             if fabs.is_dir():
                 dirname = fabs.name
                 if dirname not in subdirs:
-                    raise ValueError(f'Directory {dirname} not allowed in'
-                                     f' {base_dir}. Only allowed subdirs'
-                                     f' are: {allowed_subdirs_str or "<none>"}')
+                    unexpected(str(fabs),
+                               f'Directory {dirname} not allowed in'
+                               f' {base_dir}. Only allowed subdirs'
+                               f' are: {allowed_subdirs_str or "<none>"}.')
+                    continue
                 for fextra in sorted(fabs.iterdir(), key=lambda f: f.name):
                     if _is_ignored(fextra.name):
                         continue
                     if fextra.is_dir():
-                        raise ValueError(f'Forbidden subdir: {fextra}')
+                        unexpected(str(fextra), f'Forbidden subdir: {fextra}.')
+                        continue
                     if not any(fnmatch.fnmatch(fextra.name, pat)
                                for pat in subdirs[dirname]):
-                        raise ValueError(f'File {fextra.name} not allowed in'
-                                         f' {fextra.parent}. Patterns allowed:'
-                                         f' {subdirs[dirname]}')
+                        unexpected(str(fextra),
+                                   f'File {fextra.name} not allowed in'
+                                   f' {fextra.parent}. Patterns allowed:'
+                                   f' {subdirs[dirname]}.')
+                        continue
                     extra_files.setdefault(dirname, []).append( fextra.name )
 
         project_name: str | None = None
@@ -231,7 +262,7 @@ def enforce_instr_layout(project_dir: str) -> dict:
                 errstr += f' - in addition to subdirs: {allowed_subdirs_str}.'
             else:
                 errstr += '.'
-            raise ValueError(errstr)
+            unexpected(os.path.join(base_dir, fname), errstr)
 
         if project_name is None:
             raise ValueError(f"No valid PROJECT_main{ext} file found in '{base_dir}'.")
@@ -320,6 +351,7 @@ def enforce_instr_layout(project_dir: str) -> dict:
                        " (no DEFINE INSTRUMENT found)."))
         return {
             "project_dir": project_dir,
+            "ignored": unexpected.ignored,
             "layout": "instr",
             "base_dir": instr_dir,
             **extras,
@@ -361,7 +393,7 @@ def enforce_instr_layout(project_dir: str) -> dict:
              or entry.endswith(".egg-info") ):
             continue
         if entry not in ("pyproject.toml", subdir_name):
-            raise ValueError(
+            unexpected(os.path.join(instrpy_dir, entry),
                 f"Unexpected file or directory '{entry}' in '{instrpy_dir}'."
                 f" Only pyproject.toml and {subdir_name}/ are allowed.")
     instrpy_subdir = os.path.join(instrpy_dir, subdir_name)
@@ -397,6 +429,7 @@ def enforce_instr_layout(project_dir: str) -> dict:
 
     return {
         "project_dir": project_dir,
+        "ignored": unexpected.ignored,
         "layout": "instrpy",
         "base_dir": instrpy_subdir,
         **extras,

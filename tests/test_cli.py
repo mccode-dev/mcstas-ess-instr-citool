@@ -110,3 +110,33 @@ def test_mctest_args():
         "--strict", "--noplots", "--mpi", "3"] + base
     assert mctest_args("INSTR", "TESTS", "auto") == [
         "--strict", "--noplots", "--mpi", str(get_nprocs())] + base
+
+
+def test_lenient(copy_example, capsys, monkeypatch):
+    monkeypatch.delenv("CI", raising=False)
+    d = copy_example("ExInstrBasic")
+    (d / "instr" / "junk.txt").touch()
+    with pytest.raises(ValueError, match="use the --lenient flag"):
+        main(["-a", "check", str(d)])
+    capsys.readouterr()
+    main(["-a", "check", "--lenient", str(d)])
+    out, err = capsys.readouterr()
+    assert out == "File and directory structure OK\n"
+    assert "Unexpected file 'junk.txt'" in err
+    assert "1 unexpected file(s) or directories were ignored" in err
+
+
+def test_lenient_json_output_stays_valid(copy_example, capsys, monkeypatch):
+    monkeypatch.delenv("CI", raising=False)
+    d = copy_example("ExInstrBasic")
+    (d / "junk.txt").touch()
+    main(["-a", "json", "--lenient", str(d)])
+    info = json.loads(capsys.readouterr().out)
+    assert info["ignored"] == [str(d.resolve() / "junk.txt")]
+
+
+def test_lenient_not_in_ci(capsys, monkeypatch):
+    monkeypatch.setenv("CI", "true")
+    with pytest.raises(SystemExit):
+        main(["-a", "check", "--lenient", str(EXAMPLES_DIR / "ExInstrBasic")])
+    assert "--lenient is not allowed in CI" in capsys.readouterr().err

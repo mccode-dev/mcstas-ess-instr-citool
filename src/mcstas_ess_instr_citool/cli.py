@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -64,7 +65,17 @@ def parse_args(argv=None,prog=None):
                               ' available processors). Only for action runci.'
                               ' Default is to not use MPI.'))
 
+    parser.add_argument('--lenient', action='store_true',
+                        help=('Ignore (with a warning) unexpected files and'
+                              ' directories in the project, e.g. temporary'
+                              ' files in a working copy, instead of failing.'
+                              ' Only for testing locally: not allowed in CI'
+                              ' (when the CI environment variable is set).'))
+
     args = parser.parse_args(argv)
+    if args.lenient and os.environ.get('CI'):
+        parser.error('--lenient is not allowed in CI (the CI environment'
+                     ' variable is set)')
     if args.mpi is not None and args.action != 'runci':
         parser.error('--mpi can only be used with action runci')
     if args.action == 'generatepy' and args.outdir is None:
@@ -104,7 +115,7 @@ class OutDirMgr:
 def main( argv = None ):
     args = parse_args(argv)
     from .analyse import analyse_dir
-    info = analyse_dir( args.project_dir )
+    info = analyse_dir( args.project_dir, lenient = args.lenient )
 
     if args.action=='json':
         import json
@@ -129,6 +140,10 @@ def main( argv = None ):
         from .runtest import runtest
         with OutDirMgr(args.outdir) as outdir:
             runtest(info,outdir,mpi=args.mpi)
+    if info['ignored']:
+        print(f"WARNING: {len(info['ignored'])} unexpected file(s) or"
+              " directories were ignored (--lenient). CI will fail on them"
+              " unless they are removed (or not committed).", file=sys.stderr)
 
 if __name__ == "__main__":
     main()

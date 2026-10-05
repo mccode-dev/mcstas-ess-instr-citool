@@ -200,7 +200,7 @@ conda create -n mcstas -c conda-forge --override-channels "mcstas>=3.9.0" "mcsta
 Usage:
 
 ```
-mcstas-ess-instr-citool [-a ACTION] [-o OUTDIR] [--mpi N] PROJECT_DIR
+mcstas-ess-instr-citool [-a ACTION] [-o OUTDIR] [--mpi N] [--lenient] PROJECT_DIR
 ```
 
 All actions first validate the project layout and the `conda.yml` file,
@@ -248,6 +248,15 @@ failing with an error message on any violation. Available actions:
 If `-o OUTDIR` is not given (it must be empty or not exist), a temporary
 directory is used and cleaned up afterwards.
 
+With `--lenient`, unexpected files and directories in the project (which
+the layout rules do not allow) are ignored with a warning, instead of
+causing an error. They are also left out of the generated instruments (for
+the `instr` layout). This is for testing a working copy locally, which may
+contain temporary files, e.g. compiled instruments or simulation output.
+The other rules still apply. `--lenient` is not allowed in CI (it is refused
+when the `CI` environment variable is set, as it is in GitLab CI), since the
+committed files must follow the layout.
+
 ## Using the tool in an instrument repository
 
 To reproduce the CI tests locally before committing, run the following from
@@ -260,7 +269,10 @@ mcstas-ess-instr-citool -a runci .
 ```
 
 `mcstas-ess-instr-citool -a check .` quickly validates the layout, and
-`mcstas-ess-instr-citool .` shows a summary of the project.
+`mcstas-ess-instr-citool .` shows a summary of the project. If the working
+copy contains temporary files which the layout does not allow (e.g. output
+from running the instruments), the checks fail on them; `--lenient` ignores
+them instead (with a warning), but CI will still fail if they are committed.
 
 A GitLab CI configuration (`.gitlab-ci.yml`) for ESS instrument repositories
 at git.esss.dk, doing the same:
