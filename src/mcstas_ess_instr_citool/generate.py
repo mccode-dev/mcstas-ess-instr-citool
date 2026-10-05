@@ -1,4 +1,5 @@
 import importlib
+import inspect
 import multiprocessing as mp
 import os
 import sys
@@ -73,7 +74,13 @@ def _worker(conn, name, srcpath, outdir):
         print(f"Importing {impname}")
         mod = importlib.import_module(impname)
         print("   ... Calling .make()")
-        instr = mod.make()
+        # Write the instrument into the output directory. The code generated
+        # by mcstas-pygen from McStas 3.9.0 on otherwise uses the directory of
+        # the script (i.e. the project) as default input_path:
+        if 'input_path' in inspect.signature(mod.make).parameters:
+            instr = mod.make(input_path=str(filename.parent))
+        else:
+            instr = mod.make()
         if instr.name != filename.stem:
             raise ValueError(f'Instrument loaded from {srcpath} has '
                              f'unexpected name. Expected "{filename.stem}" '
