@@ -140,3 +140,13 @@ def test_lenient_not_in_ci(capsys, monkeypatch):
     with pytest.raises(SystemExit):
         main(["-a", "check", "--lenient", str(EXAMPLES_DIR / "ExInstrBasic")])
     assert "--lenient is not allowed in CI" in capsys.readouterr().err
+
+
+def test_version(capsys):
+    from mcstas_ess_instr_citool import version
+    with pytest.raises(SystemExit) as e:
+        main(["--version"])
+    assert e.value.code == 0
+    out = capsys.readouterr().out.strip()
+    assert out.endswith(f" {version()}")
+    assert version() != "unversioned_local_source"

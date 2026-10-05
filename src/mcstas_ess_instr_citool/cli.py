@@ -39,6 +39,11 @@ def parse_args(argv=None,prog=None):
 
     parser = argparse.ArgumentParser(prog=prog)
 
+    from . import version
+    parser.add_argument('--version', action='version',
+                        version=f'%(prog)s {version()}',
+                        help='Show the version of the tool and exit.')
+
     parser.add_argument(
         "project_dir",
         help='Path to a directory containing a "project".',

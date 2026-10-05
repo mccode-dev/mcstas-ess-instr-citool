@@ -1,14 +1,19 @@
 name: CI
 
+# Pushes run these tests via pypi.yml (which calls this workflow), so they
+# are not triggered by pushes here:
 on:
-  push:
   pull_request:
+  workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # (The "ci-" prefix keeps the group different from that of pypi.yml, which
+  # calls this workflow, and whose name github.workflow then refers to.)
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
