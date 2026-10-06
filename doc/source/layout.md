@@ -70,6 +70,15 @@ present), so e.g. an analysis package in `extra/` can be used by the tests.
 
 ## Local components and data files
 
+```{warning}
+Local components and data files exist to allow short-term workarounds and
+special needs. In general, components (and sometimes also data files) should
+instead be submitted upstream to McStas, at
+[github.com/mccode-dev/McCode](https://github.com/mccode-dev/McCode), so they
+are maintained, tested and available to everyone, and the local copies can
+be removed again.
+```
+
 Project-specific components and data files are placed in two subdirectories
 (of `instr/`, or of the python package `instrpy/PROJECT_instr/`):
 
