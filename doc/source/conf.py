@@ -34,8 +34,8 @@ html_theme_options = {
 }
 html_context = {
     'display_github': True,
-    'github_user': 'tkittel',
-    'github_repo': 'dmsc-instr-repo-prototype',
+    'github_user': 'mccode-dev',
+    'github_repo': 'mcstas-ess-instr-citool',
     'github_version': 'main',
     'conf_py_path': '/doc/source/',
 }
@@ -45,7 +45,7 @@ html_context = {
 # latest run of the workflow instrument-repos.yml (from the GitHub API), and
 # the pipeline status badges of the repositories themselves (from GitLab):
 
-GITHUB_REPO = 'tkittel/dmsc-instr-repo-prototype'
+GITHUB_REPO = 'mccode-dev/mcstas-ess-instr-citool'
 
 def _latest_test_run():
     """The latest completed (and not cancelled) run of instrument-repos.yml on

@@ -3,7 +3,7 @@
 Install the tool with pip (Python 3.11 or newer), e.g. directly from GitHub:
 
 ```
-pip install git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+pip install git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
 ```
 
 or with `pip install -e .` from a clone of the repository.

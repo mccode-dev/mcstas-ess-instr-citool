@@ -14,12 +14,12 @@ anything else in `extra/`. In its CI, the tool checks the layout, and runs
 all tests with `mctest`:
 
 ```
-pip install git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+pip install git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
 mcstas-ess-instr-citool -a runci .
 ```
 
 The source code and the issue tracker are in the GitHub repository
-[tkittel/dmsc-instr-repo-prototype](https://github.com/tkittel/dmsc-instr-repo-prototype).
+[mccode-dev/mcstas-ess-instr-citool](https://github.com/mccode-dev/mcstas-ess-instr-citool).
 
 ```{toctree}
 :maxdepth: 2

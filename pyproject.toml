@@ -35,6 +35,11 @@ package-dir = {"" = "src"}
 where = ["src"]
 include = ["mcstas_ess_instr_citool*"]
 
+[project.urls]
+Homepage = "https://mccode-dev.github.io/mcstas-ess-instr-citool/"
+Source = "https://github.com/mccode-dev/mcstas-ess-instr-citool"
+Issues = "https://github.com/mccode-dev/mcstas-ess-instr-citool/issues"
+
 [project.scripts]
 mcstas-ess-instr-citool = "mcstas_ess_instr_citool.cli:main"
 

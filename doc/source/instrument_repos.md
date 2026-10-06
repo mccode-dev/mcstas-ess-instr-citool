@@ -5,7 +5,7 @@ the repository root, in the conda environment created from its `conda.yml`
 (`conda env create -f conda.yml`):
 
 ```
-pip install git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+pip install git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
 mcstas-ess-instr-citool -a runci .
 ```
 
@@ -29,7 +29,7 @@ runci:
     - curl -Ls -o .micromamba/bin/micromamba --create-dirs https://github.com/mamba-org/micromamba-releases/releases/latest/download/micromamba-linux-64
     - chmod +x .micromamba/bin/micromamba
     - .micromamba/bin/micromamba create -y -q -n ci -f conda.yml
-    - .micromamba/bin/micromamba run -n ci pip install -q git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+    - .micromamba/bin/micromamba run -n ci pip install -q git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
     - .micromamba/bin/micromamba run -n ci mcstas-ess-instr-citool -a runci .
 ```
 

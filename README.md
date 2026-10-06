@@ -1,11 +1,10 @@
-# dmsc-instr-repo-prototype
+# mcstas-ess-instr-citool
 
-Test repo for work on ESS instrument repos at DMSC.
-
-This repository prototypes what an ESS instrument simulation repository
-should look like, and contains a tool, `mcstas-ess-instr-citool`, which
-validates such a repository and runs its instruments through McStas' `mctest`
-in CI.
+`mcstas-ess-instr-citool` validates ESS instrument simulation repositories
+(McStas instrument models at DMSC), and runs their instruments through
+McStas' `mctest` in CI. This repository defines the standard layout of such
+repositories, and contains the tool and example projects. The documentation
+is at <https://mccode-dev.github.io/mcstas-ess-instr-citool/>.
 
 Contents:
 
@@ -271,7 +270,7 @@ the repository root, in the conda environment created from its `conda.yml`
 (`conda env create -f conda.yml`):
 
 ```
-pip install git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+pip install git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
 mcstas-ess-instr-citool -a runci .
 ```
 
@@ -295,7 +294,7 @@ runci:
     - curl -Ls -o .micromamba/bin/micromamba --create-dirs https://github.com/mamba-org/micromamba-releases/releases/latest/download/micromamba-linux-64
     - chmod +x .micromamba/bin/micromamba
     - .micromamba/bin/micromamba create -y -q -n ci -f conda.yml
-    - .micromamba/bin/micromamba run -n ci pip install -q git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
+    - .micromamba/bin/micromamba run -n ci pip install -q git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
     - .micromamba/bin/micromamba run -n ci mcstas-ess-instr-citool -a runci .
 ```
 
@@ -381,7 +380,7 @@ make -C doc html
 The workflow `.github/workflows/doc.yml` builds the documentation (treating
 warnings as errors) and checks its links for every push and pull request.
 The workflow `publish-doc.yml` publishes it on GitHub Pages
-(<https://tkittel.github.io/dmsc-instr-repo-prototype/>), for pushes to
+(<https://mccode-dev.github.io/mcstas-ess-instr-citool/>), for pushes to
 `main` and version tags, and after each run of `instrument-repos.yml` (the
 page about the instrument repositories shows the results of its latest run,
 from the GitHub API, and the CI status badges of the repositories), when the repository variable `PUBLISH_DOC` is set
