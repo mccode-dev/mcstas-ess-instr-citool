@@ -83,6 +83,12 @@ def make_parser(prog=None):
                               ' Only for testing locally: not allowed in CI'
                               ' (when the CI environment variable is set).'))
 
+    parser.add_argument('--errtrace', action='store_true',
+                        help=('Show the full Python traceback for all errors.'
+                              ' By default, errors caused by the project or'
+                              ' the environment (e.g. a failed check) are'
+                              ' shown as a message only.'))
+
     return parser
 
 def parse_args(argv=None,prog=None):
@@ -137,6 +143,16 @@ class OutDirMgr:
 
 def main( argv = None ):
     args = parse_args(argv)
+    from .errors import UserError
+    try:
+        _run( args )
+    except UserError as e:
+        if args.errtrace:
+            raise
+        print(f"ERROR: {e}", file=sys.stderr)
+        raise SystemExit(1) from None
+
+def _run( args ):
     if args.action == 'repos':
         from .repodb import print_table
         print_table()

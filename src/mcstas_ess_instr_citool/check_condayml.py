@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .errors import CheckFailed
 from .util import minimum_mcstas_version
 
 # Every valid environment must contain these as conda dependencies.
@@ -91,7 +92,7 @@ def _version_at_least(version: tuple[int, ...],
 
 
 def _runtime_error(path: Path, message: str) -> RuntimeError:
-    return RuntimeError(f"{path}: {message}")
+    return CheckFailed(f"{path}: {message}")
 
 
 def _remove_yaml_comment(line: str) -> str:

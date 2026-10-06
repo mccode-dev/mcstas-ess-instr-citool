@@ -20,7 +20,7 @@ conda create -n mcstas -c conda-forge --override-channels "mcstas>=3.9.0" "mcsta
 Usage (see also the [](cmdline.md)):
 
 ```
-mcstas-ess-instr-citool [-a ACTION] [-o OUTDIR] [--mpi N] [--lenient] PROJECT_DIR
+mcstas-ess-instr-citool [-a ACTION] [-o OUTDIR] [--mpi N] [--lenient] [--errtrace] PROJECT_DIR
 ```
 
 All actions first validate the project layout and the `conda.yml` file,
@@ -79,3 +79,9 @@ contain temporary files, e.g. compiled instruments or simulation output.
 The other rules still apply. `--lenient` is not allowed in CI (it is refused
 when the `CI` environment variable is set, as it is in GitLab CI), since the
 committed files must follow the layout.
+
+Errors caused by the project or the environment, e.g. a violation of the
+layout rules or a failed check, are reported as a message (starting with
+`ERROR:`), with exit code 1. With `--errtrace`, the full Python traceback is
+shown instead, e.g. for debugging the tool. Other errors are always shown
+with a traceback.

@@ -31,11 +31,24 @@ def test_check(capsys):
     assert capsys.readouterr().out == "File and directory structure OK\n"
 
 
-def test_check_fails(copy_example):
+def test_check_fails(copy_example, capsys):
     d = copy_example("ExInstrBasic")
     (d / "instr" / "junk.txt").touch()
-    with pytest.raises(ValueError, match="Unexpected file 'junk.txt'"):
+    # Errors in the project are reported as a message, without a traceback:
+    with pytest.raises(SystemExit) as e:
         main(["-a", "check", str(d)])
+    assert e.value.code == 1
+    err = capsys.readouterr().err
+    assert err.startswith("ERROR: Unexpected file 'junk.txt'")
+    assert "Traceback" not in err
+
+
+def test_errtrace(copy_example):
+    from mcstas_ess_instr_citool.errors import ProjectError
+    d = copy_example("ExInstrBasic")
+    (d / "instr" / "junk.txt").touch()
+    with pytest.raises(ProjectError, match="Unexpected file 'junk.txt'"):
+        main(["-a", "check", "--errtrace", str(d)])
 
 
 def test_bad_action(capsys):
@@ -116,9 +129,9 @@ def test_lenient(copy_example, capsys, monkeypatch):
     monkeypatch.delenv("CI", raising=False)
     d = copy_example("ExInstrBasic")
     (d / "instr" / "junk.txt").touch()
-    with pytest.raises(ValueError, match="use the --lenient flag"):
+    with pytest.raises(SystemExit):
         main(["-a", "check", str(d)])
-    capsys.readouterr()
+    assert "use the --lenient flag" in capsys.readouterr().err
     main(["-a", "check", "--lenient", str(d)])
     out, err = capsys.readouterr()
     assert out == "File and directory structure OK\n"

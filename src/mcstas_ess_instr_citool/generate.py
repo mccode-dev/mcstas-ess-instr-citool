@@ -6,6 +6,8 @@ import sys
 import traceback
 from pathlib import Path
 
+from .errors import CheckFailed, ProjectError
+
 # Max time (seconds) allowed for generating a single .instr file from a
 # McStasScript python file:
 DEFAULT_PYGEN_TIMEOUT = 600
@@ -82,9 +84,9 @@ def _worker(conn, name, srcpath, outdir):
         else:
             instr = mod.make()
         if instr.name != filename.stem:
-            raise ValueError(f'Instrument loaded from {srcpath} has '
-                             f'unexpected name. Expected "{filename.stem}" '
-                             f'but got "{instr.name}"')
+            raise ProjectError(f'Instrument loaded from {srcpath} has '
+                               f'unexpected name. Expected "{filename.stem}" '
+                               f'but got "{instr.name}"')
         print("   ... Calling .write_full_instrument()")
         instr.write_full_instrument()
         ok = True
@@ -139,7 +141,7 @@ def _genpy( name, srcpath, outdir, timeout = DEFAULT_PYGEN_TIMEOUT ):
         parent.close()
     process.join()
     if status != "ok":
-        raise RuntimeError(message)
+        raise CheckFailed(message)
 
 def P(p):
     return Path(p).resolve().absolute()

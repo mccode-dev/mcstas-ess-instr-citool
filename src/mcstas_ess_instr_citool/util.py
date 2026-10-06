@@ -1,5 +1,7 @@
 import subprocess
 
+from .errors import SetupError
+
 minimum_mcstas_version = (3,9,0)
 minimum_mcstasscript_version = (0,0,94)
 
@@ -11,7 +13,7 @@ def mcstas_info():
     def cmd(n):
         c = shutil.which(n)
         if not c:
-            raise RuntimeError(f'Command not found: {n}')
+            raise SetupError(f'Command not found: {n}')
         return c
     cmds = dict( (n,cmd(n)) for n in ['mcstas','mcrun','mctest','mcstas-pygen'] )
     o = subprocess.run( [cmds['mcstas'], "--version-num"],
@@ -21,8 +23,8 @@ def mcstas_info():
     version = ( int(major), int(minor), int(patch) )
     if not version >= minimum_mcstas_version:
         needed = '.'.join(str(i) for i in minimum_mcstas_version)
-        raise RuntimeError('Too old McStas found: '
-                           f'{major}.{minor}.{patch} (needs {needed})')
+        raise SetupError('Too old McStas found: '
+                         f'{major}.{minor}.{patch} (needs {needed})')
     _cache[0] = { 'cmd' : cmds, 'version' : version }
     return _cache[0]
 
@@ -31,14 +33,14 @@ def check_mcstasscript_version():
     try:
         v = version('mcstasscript')
     except PackageNotFoundError:
-        raise RuntimeError('McStasScript not found') from None
+        raise SetupError('McStasScript not found') from None
     needed = '.'.join(str(i) for i in minimum_mcstasscript_version)
     try:
         ok = tuple(int(i) for i in v.split('.')[:3]) >= minimum_mcstasscript_version
     except ValueError:
         ok = True  # unusual version string, e.g. a development version
     if not ok:
-        raise RuntimeError(f'Too old McStasScript found: {v} (needs {needed})')
+        raise SetupError(f'Too old McStasScript found: {v} (needs {needed})')
 
 def get_nprocs( nice_factor = 0.9 ):
     import os

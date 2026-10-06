@@ -6,6 +6,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from .errors import CheckFailed
+
 # The same regex used by mctest to find %Example lines:
 _EXAMPLE_RE = re.compile(r"\%Example:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)")
 
@@ -91,8 +93,8 @@ def _generate_from_instr( info, outdir ):
             p = subprocess.run(cmd, cwd=path.parent, capture_output=True,
                                text=True)
             if p.returncode != 0 or not pyfile.is_file():
-                raise RuntimeError(f'mcstas-pygen failed for {path}:\n'
-                                   + p.stdout + p.stderr)
+                raise CheckFailed(f'mcstas-pygen failed for {path}:\n'
+                                  + p.stdout + p.stderr)
             code = pyfile.read_text()
         code = postprocess_pygen_output( code, path.stem, path.read_text() )
         if 'includes' in info['extra_files']:
@@ -129,9 +131,9 @@ def postprocess_pygen_output( code, name, instr_text ):
     ntests = code.count('instr.add_test(')
     nexamples = len(_EXAMPLE_RE.findall(instr_text))
     if ntests != nexamples:
-        raise RuntimeError(f'Could not translate all %Example lines in {name}'
-                           f' into tests ({nexamples} lines, but'
-                           f' {ntests} tests)')
+        raise CheckFailed(f'Could not translate all %Example lines in {name}'
+                          f' into tests ({nexamples} lines, but'
+                          f' {ntests} tests)')
 
     # Use the input_path of McStasScript by default (the working directory),
     # so the instrument is not written into the python package:

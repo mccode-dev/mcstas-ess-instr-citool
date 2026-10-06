@@ -4,6 +4,8 @@ import fnmatch
 import subprocess
 from pathlib import Path
 
+from .errors import CheckFailed
+
 # Files allowed in localcomps/: components, and C libraries which they
 # include (e.g. with %include "mylib" in a SHARE section).
 LOCALCOMPS_PATTERNS = ['*.comp', '*.c', '*.h']
@@ -66,7 +68,7 @@ def check_local_components( info, resourcedir = None ):
         if ( fnmatch.fnmatch(fn, '*.comp') and Path(fn).stem in std_comps )
         or ( not fnmatch.fnmatch(fn, '*.comp') and fn in std_libs ) )
     if shadowing:
-        raise RuntimeError(
+        raise CheckFailed(
             'Files in localcomps/ must not have the same names as components'
             ' or C library files in the McStas library (which they would'
             ' shadow): ' + ', '.join(shadowing) + '. Please rename them (or'
@@ -112,7 +114,7 @@ def check_local_data( info, resourcedir = None, ncrystal_names = None ):
         for fn in files
         if fn.lower() in mcstas_names or fn.lower() in ncrystal_names )
     if clashes:
-        raise RuntimeError(
+        raise CheckFailed(
             'Files in localdata/ must not have the same names as data files'
             ' of McStas or materials of the NCrystal standard library: '
             + ', '.join( f'{fn} ({what})' for fn, what in clashes )

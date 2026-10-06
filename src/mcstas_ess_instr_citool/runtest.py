@@ -2,6 +2,8 @@ import json
 import shlex
 import subprocess
 
+from .errors import CheckFailed, SetupError
+
 
 def mctest_args( instrdir, testdir, mpi = None ):
     """Arguments for mctest. If mpi is an integer or "auto" (meaning the
@@ -32,7 +34,7 @@ def runtest( info, outdir, mpi = None ):
     ec = subprocess.run( [ mctest_cmd ] + cmd,
                          check = False, capture_output = False )
     if not ec.returncode==0:
-        raise RuntimeError('mctest command failed')
+        raise CheckFailed('mctest command failed')
     json_files = list(testdir.glob('*/testresults_*.json'))
     if len(json_files)>1:
         raise RuntimeError('mctest command produced multiple testresults_*.json')
@@ -59,7 +61,7 @@ def run_extra_pytests( info, outdir ):
     if not srcdir:
         return
     if importlib.util.find_spec("pytest") is None:
-        raise RuntimeError("pytest is needed to run the tests in extra_pytests/")
+        raise SetupError("pytest is needed to run the tests in extra_pytests/")
     testdir = outdir.joinpath("extra_pytests").absolute()
     shutil.copytree( srcdir, testdir,
                      ignore = shutil.ignore_patterns('__pycache__', '.*') )
@@ -79,7 +81,7 @@ def run_extra_pytests( info, outdir ):
     print(f"Launching: python {shlex.join(cmd[1:])} (in {testdir})", flush=True)
     ec = subprocess.run( cmd, cwd = testdir, env = env, check = False )
     if ec.returncode != 0:
-        raise RuntimeError('pytest failed for the tests in extra_pytests/')
+        raise CheckFailed('pytest failed for the tests in extra_pytests/')
 
 def check_results( res ):
     """Double-check the mctest json results, since mctest does not always
@@ -97,5 +99,5 @@ def check_results( res ):
         elif t.get('testval') in (None, -1):
             problems.append(f'{name}: no test value extracted')
     if problems:
-        raise RuntimeError('mctest results contain failures:\n  '
-                           + '\n  '.join(problems))
+        raise CheckFailed('mctest results contain failures:\n  '
+                          + '\n  '.join(problems))

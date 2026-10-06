@@ -6,6 +6,7 @@ import re
 import sys
 import tomllib  # Python 3.11+ only
 
+from .errors import ProjectError
 from .localfiles import subdir_patterns
 from .todo import TODO_FILE_NAME, parse_todo
 
@@ -38,7 +39,7 @@ class _Unexpected:
 
     def __call__(self, path: str, msg: str) -> None:
         if not self.lenient:
-            raise ValueError(msg + LENIENT_HINT)
+            raise ProjectError(msg + LENIENT_HINT)
         print(f"WARNING: {msg} Ignoring it (--lenient).", file=sys.stderr)
         self.ignored.append(path)
 
@@ -59,7 +60,7 @@ def check_root_entries(project_dir: str, unexpected: _Unexpected | None = None) 
         path = os.path.join(project_dir, entry)
         if entry in ROOT_DIRS:
             if not os.path.isdir(path):
-                raise ValueError(f"'{entry}' in '{project_dir}' must be a directory.")
+                raise ProjectError(f"'{entry}' in '{project_dir}' must be a directory.")
             continue
         if ( os.path.isfile(path)
              and any(fnmatch.fnmatchcase(entry, p) for p in ROOT_FILE_PATTERNS) ):
@@ -123,7 +124,7 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
 
     condareqfile = os.path.join(project_dir, "conda.yml")
     if not os.path.isfile(condareqfile):
-        raise ValueError(f"Missing conda requirements file: {condareqfile}")
+        raise ProjectError(f"Missing conda requirements file: {condareqfile}")
 
     from .check_condayml import validate_conda_requirements
     condareq = validate_conda_requirements(condareqfile)
@@ -144,14 +145,14 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
     }
     if extras["extra_pytests_dir"] and not any(
             r["name"] == "pytest" for r in condareq):
-        raise ValueError("pytest must be listed in conda.yml, since the"
-                         " project has an extra_pytests/ directory.")
+        raise ProjectError("pytest must be listed in conda.yml, since the"
+                           " project has an extra_pytests/ directory.")
 
     has_instr = os.path.isdir(instr_dir)
     has_instrpy = os.path.isdir(instrpy_dir)
 
     if has_instr == has_instrpy:  # both True or both False
-        raise ValueError(
+        raise ProjectError(
             "Must have exactly one of directories: 'instr' or 'instrpy'. "
             f"Found: instr={has_instr}, instrpy={has_instrpy}."
         )
@@ -230,7 +231,7 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
                 if project_name is None:
                     project_name = this_project
                 elif this_project != project_name:
-                    raise ValueError(
+                    raise ProjectError(
                         f"All main/mode files must share PROJECTNAME. "
                         f"Expected '{project_name}', got '{this_project}' in '{fname}'."
                     )
@@ -246,7 +247,7 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
                 if project_name is None:
                     project_name = this_project
                 elif this_project != project_name:
-                    raise ValueError(
+                    raise ProjectError(
                         f"All main/mode files must share PROJECTNAME. "
                         f"Expected '{project_name}', got '{this_project}' in '{fname}'."
                     )
@@ -273,9 +274,9 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
             unexpected(os.path.join(base_dir, fname), errstr)
 
         if project_name is None:
-            raise ValueError(f"No valid PROJECT_main{ext} file found in '{base_dir}'.")
+            raise ProjectError(f"No valid PROJECT_main{ext} file found in '{base_dir}'.")
         if main_count != 1:
-            raise ValueError(
+            raise ProjectError(
                 f"Must have exactly one file named '{project_name}_main{ext}' in '{base_dir}'. "
                 f"Found {main_count}."
             )
@@ -284,29 +285,29 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
         for fname in sorted(helper_files):
             stem = fname[:-len(ext)]
             if stem.startswith(f"{project_name}_"):
-                raise ValueError(
+                raise ProjectError(
                     f"Unexpected file '{fname}' in '{base_dir}'. Files named"
                     f" {project_name}_* must be either {project_name}_main{ext}"
                     f" or {project_name}_modeMODENAME{ext} (with MODENAME"
                     " matching [A-Za-z][A-Za-z0-9]*).")
             if not stem.isidentifier() or keyword.iskeyword(stem):
-                raise ValueError(
+                raise ProjectError(
                     f"Invalid helper module name '{fname}' in '{base_dir}'."
                     " Helper module names must be valid python identifiers.")
             helper_modules.append(stem)
 
         if len(set(mode_names)) != len(mode_names):
             dupes = sorted({m for m in mode_names if mode_names.count(m) > 1})
-            raise ValueError(f"Duplicate mode name(s) found: {dupes}")
+            raise ProjectError(f"Duplicate mode name(s) found: {dupes}")
 
         if len(set(m.lower() for m in mode_names)) != len(mode_names):
-            raise ValueError("Clashing mode names detected (mode names must"
-                             " differ by more than upper/lower case):"
-                             f" {sorted(mode_names)}")
+            raise ProjectError("Clashing mode names detected (mode names must"
+                               " differ by more than upper/lower case):"
+                               f" {sorted(mode_names)}")
 
         for pat in ['main','test']:
             if any( m.lower().strip()==pat for m in mode_names ):
-                raise ValueError(f'"{pat}" is not allowed as a mode name')
+                raise ProjectError(f'"{pat}" is not allowed as a mode name')
 
         return {
             "project_name": project_name,
@@ -331,11 +332,11 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
 
         project_tbl = data.get("project")
         if not isinstance(project_tbl, dict):
-            raise ValueError("In 'instrpy', pyproject.toml must use PEP 621 with a [project] table.")
+            raise ProjectError("In 'instrpy', pyproject.toml must use PEP 621 with a [project] table.")
 
         declared = project_tbl.get("name")
         if not isinstance(declared, str) or not declared.strip():
-            raise ValueError("In 'instrpy', pyproject.toml [project].name is required and must be a non-empty string.")
+            raise ProjectError("In 'instrpy', pyproject.toml [project].name is required and must be a non-empty string.")
 
         return declared.strip()
 
@@ -352,7 +353,7 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
             expected = pathlib.Path(path).stem
             found = _instrument_name(path)
             if found != expected:
-                raise ValueError(
+                raise ProjectError(
                     f"The instrument in '{path}' must be named after the"
                     f" file, i.e. 'DEFINE INSTRUMENT {expected}(...)'"
                     + (f" (found '{found}')." if found else
@@ -369,7 +370,7 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
     # ---- instrpy layout ----
     pyproject_path = os.path.join(instrpy_dir, "pyproject.toml")
     if not os.path.isfile(pyproject_path):
-        raise ValueError("In 'instrpy', pyproject.toml must exist.")
+        raise ProjectError("In 'instrpy', pyproject.toml must exist.")
 
     # Must contain exactly one subdir named PROJECTNAME_instr
     subdir_suffix = "_instr"
@@ -387,7 +388,7 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
             candidates.append((m.group("project"), d))
 
     if len(candidates) != 1:
-        raise ValueError(
+        raise ProjectError(
             "In 'instrpy', there must be exactly one subdirectory named 'PROJECTNAME_instr'. "
             f"Found {len(candidates)} candidates."
         )
@@ -408,10 +409,10 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
 
     init_path = os.path.join(instrpy_subdir, "__init__.py")
     if not os.path.isfile(init_path):
-        raise ValueError("In 'instrpy/PROJECTNAME_instr', '__init__.py' must exist.")
+        raise ProjectError("In 'instrpy/PROJECTNAME_instr', '__init__.py' must exist.")
     init_size = os.path.getsize(init_path)
     if init_size != 0:
-        raise ValueError(f"In 'instrpy/PROJECTNAME_instr', '__init__.py' must be empty (size 0), got {init_size} bytes.")
+        raise ProjectError(f"In 'instrpy/PROJECTNAME_instr', '__init__.py' must be empty (size 0), got {init_size} bytes.")
 
     ext = ".py"
     payload = ensure_files_in_dir(instrpy_subdir, ext,
@@ -421,7 +422,7 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
                                   allow_helpers = True)
 
     if payload["project_name"] != project_name_from_subdir:
-        raise ValueError(
+        raise ProjectError(
             "PROJECTNAME must be consistent between the subdir name and filenames. "
             f"Subdir PROJECTNAME='{project_name_from_subdir}', but filenames PROJECTNAME='{payload['project_name']}'."
         )
@@ -429,7 +430,7 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
     # Strict pyproject validation: PEP 621 [project].name only; it must match PROJECTNAME
     declared_project_name = require_pep621_project_name(pyproject_path)
     if normalize_pkg_name(declared_project_name) != normalize_pkg_name(payload["project_name"]):
-        raise ValueError(
+        raise ProjectError(
             "In 'instrpy', pyproject.toml [project].name must match PROJECTNAME. "
             f"Expected (normalized) '{normalize_pkg_name(payload['project_name'])}', "
             f"got '{declared_project_name}'."
