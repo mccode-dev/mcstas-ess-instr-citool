@@ -2,9 +2,9 @@ name: Publish documentation
 
 # Builds the documentation and publishes it on GitHub Pages, for pushes to
 # main and version tags (vX.Y.Z), and after each run of the workflow testing
-# the instrument repositories (whose results the documentation shows). This is only done when the repository
-# variable PUBLISH_DOC is "true", which requires that GitHub Pages is
-# enabled in the repository settings, with "GitHub Actions" as the source.
+# the instrument repositories (whose results the documentation shows).
+# GitHub Pages must be enabled in the repository settings, with "GitHub
+# Actions" as the source.
 on:
   push:
     branches: [main]
@@ -31,7 +31,6 @@ concurrency:
 jobs:
   build-and-deploy:
     name: Build and publish documentation
-    if: vars.PUBLISH_DOC == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

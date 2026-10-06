@@ -100,9 +100,8 @@ TODO items for mcstas-ess-instr-citool
   (and the documentation) can use "pip install mcstas-ess-instr-citool"
   instead of installing from GitHub.
 
-* Documentation: the workflow publish-doc.yml publishes it on GitHub Pages
-  once GitHub Pages is enabled (Settings, Pages, source "GitHub Actions")
-  and the repository variable PUBLISH_DOC is set to "true". The README and
-  the documentation (doc/source/) now cover the same topics; consider
+* Documentation: the README and the documentation (doc/source/), published
+  at https://mccode-dev.github.io/mcstas-ess-instr-citool/, now cover the
+  same topics; consider
   reducing the README to a short overview with a link to the documentation,
   so the content is only maintained in one place.

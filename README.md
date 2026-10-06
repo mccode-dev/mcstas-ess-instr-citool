@@ -383,7 +383,7 @@ The workflow `publish-doc.yml` publishes it on GitHub Pages
 (<https://mccode-dev.github.io/mcstas-ess-instr-citool/>), for pushes to
 `main` and version tags, and after each run of `instrument-repos.yml` (the
 page about the instrument repositories shows the results of its latest run,
-from the GitHub API, and the CI status badges of the repositories), when the repository variable `PUBLISH_DOC` is set
-to `true` (and GitHub Pages is enabled in the repository settings, with
-"GitHub Actions" as the source).
+from the GitHub API, and the CI status badges of the repositories). GitHub
+Pages is enabled in the repository settings, with "GitHub Actions" as the
+source.
 
