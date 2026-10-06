@@ -102,6 +102,5 @@ TODO items for mcstas-ess-instr-citool
 
 * Documentation: the README and the documentation (doc/source/), published
   at https://mccode-dev.github.io/mcstas-ess-instr-citool/, now cover the
-  same topics; consider
-  reducing the README to a short overview with a link to the documentation,
-  so the content is only maintained in one place.
+  same topics; consider reducing the README to a short overview with a link
+  to the documentation, so the content is only maintained in one place.
