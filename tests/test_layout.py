@@ -476,3 +476,22 @@ def test_lenient_other_rules_still_apply(copy_example):
         d / "instr" / "ExInstrBasic_mainx.instr")
     with pytest.raises(ValueError, match="Must have exactly one file named"):
         analyse_dir(d, lenient=True)
+
+
+def test_todo_items(copy_example):
+    d = copy_example("ExInstrBasic")
+    assert analyse_dir(d)["todo_items"] is None
+    (d / "TODO").write_text("TODO\n====\n\n* One.\n\n* Two,\n  continued.\n")
+    assert analyse_dir(d)["todo_items"] == 2
+
+
+def test_todo_bad_format(copy_example):
+    d = copy_example("ExInstrBasic")
+    (d / "TODO").write_text("* One.\nNot indented.\n")
+    fails(d, r"TODO, line 2: unexpected line after the first item")
+
+
+def test_todo_other_names_not_allowed(copy_example):
+    d = copy_example("ExInstrBasic")
+    (d / "TODO.md").write_text("* One.\n")
+    fails(d, r"Unexpected file or directory 'TODO.md'")

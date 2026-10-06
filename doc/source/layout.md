@@ -53,9 +53,9 @@ An instrument project is a directory containing:
 * Optionally an `extra_pytests/` directory with tests, which are run with
   `pytest` by `runci` (see [](#tests-in-extra_pytests)). `pytest` must then be listed in
   `conda.yml`.
-* Optionally files named `README*`, `TODO*`, `LICENSE*`, `CHANGELOG*` and
+* Optionally files named `README*`, `LICENSE*`, `CHANGELOG*` and
   `CONTRIBUTING*` (e.g. the contacts and contribution guidelines of the
-  project).
+  project), and a `TODO` file (see [The TODO file](#the-todo-file)).
 * Nothing else, apart from hidden files and directories (names starting with
   `.`, e.g. `.gitignore` and `.gitlab-ci.yml`).
 
@@ -120,6 +120,34 @@ follows:
 `[A-Za-z][A-Za-z0-9]*`. The mode names `main` and `test` are reserved, and
 mode names differing only in case are not allowed. Hidden files (names
 starting with `.`) and backup files (names ending with `~`) are ignored.
+
+## The TODO file
+
+The optional `TODO` file lists the open issues of the project, in a simple
+format which the tool checks, so the items can be counted (e.g. for the
+[overview of the instrument repositories at DMSC](dmsc_repos.md)):
+
+* First, optionally, a title and other text, in lines starting at the left
+  margin (e.g. a title, a line of `=` below it, and an introduction).
+* Then the items, each starting with `* ` at the left margin. The following
+  lines of an item are indented with spaces, and may contain anything (e.g.
+  lists). Blank lines are ignored.
+* After the first item, every line starting at the left margin must start a
+  new item.
+
+Example:
+
+```
+TODO items for the EXAMPLE model
+================================
+
+* The parameter documentation in the header of instr/EXAMPLE_main.instr is
+  empty. Fill in the %parameters section, so that mcdoc shows them.
+
+* Tests: only the monitors before the sample are tested. Consider:
+  - a mode with a single crystal sample;
+  - tests of the detectors.
+```
 
 ## The conda.yml file
 

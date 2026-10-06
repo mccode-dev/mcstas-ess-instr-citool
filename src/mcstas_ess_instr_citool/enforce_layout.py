@@ -7,6 +7,7 @@ import sys
 import tomllib  # Python 3.11+ only
 
 from .localfiles import subdir_patterns
+from .todo import TODO_FILE_NAME, parse_todo
 
 
 def _is_ignored(fname: str) -> bool:
@@ -44,7 +45,7 @@ class _Unexpected:
 # Directories and files allowed at the top level of a project (in addition to
 # hidden files like .gitignore or .gitlab-ci.yml, which are ignored):
 ROOT_DIRS = ("instr", "instrpy", "extra", "extra_pytests")
-ROOT_FILE_PATTERNS = ("conda.yml", "README*", "TODO*", "LICENSE*", "CHANGELOG*",
+ROOT_FILE_PATTERNS = ("conda.yml", "README*", TODO_FILE_NAME, "LICENSE*", "CHANGELOG*",
                       "CONTRIBUTING*")
 
 def check_root_entries(project_dir: str, unexpected: _Unexpected | None = None) -> None:
@@ -98,8 +99,9 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
     The top level of project_dir may only contain conda.yml, the instr/ or
     instrpy/ directory, the optional directories extra/ (anything, with no
     rules) and extra_pytests/ (tests run with pytest), and files named
-    README*, TODO*, LICENSE*, CHANGELOG* or CONTRIBUTING*. If extra_pytests/
-    exists, pytest must be listed in conda.yml.
+    README*, LICENSE*, CHANGELOG* or CONTRIBUTING*, and a TODO file (which
+    must follow the format described in todo.py). If extra_pytests/ exists,
+    pytest must be listed in conda.yml.
 
     Hidden files (names starting with '.') and backup files (names ending
     with '~') are ignored. With lenient=True, unexpected files and
@@ -128,9 +130,15 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
 
     unexpected = _Unexpected(lenient)
     check_root_entries(project_dir, unexpected)
+    todo_path = os.path.join(project_dir, TODO_FILE_NAME)
+    todo_items = None
+    if os.path.isfile(todo_path):
+        with open(todo_path, encoding="utf-8", errors="replace") as f:
+            todo_items = len(parse_todo(f.read(), filename=todo_path))
     extra_dir = os.path.join(project_dir, "extra")
     extra_pytests_dir = os.path.join(project_dir, "extra_pytests")
     extras = {
+        "todo_items": todo_items,
         "extra_dir": extra_dir if os.path.isdir(extra_dir) else None,
         "extra_pytests_dir": extra_pytests_dir if os.path.isdir(extra_pytests_dir) else None,
     }

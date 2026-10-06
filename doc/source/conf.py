@@ -9,6 +9,7 @@ import pathlib
 
 from mcstas_ess_instr_citool import version as _tool_version
 from mcstas_ess_instr_citool.repodb import repos
+from mcstas_ess_instr_citool.todo import TODO_FILE_NAME, parse_todo
 
 project = 'mcstas-ess-instr-citool'
 copyright = '2025-2026, European Spallation Source ERIC'
@@ -86,26 +87,51 @@ def _test_result( job ):
     elif job['conclusion'] == 'failure':
         text = '❌ fails'
     elif steps.get('Check the layout (not expected to pass)') == 'success':
-        text = 'not in the standard layout yet'
+        text = 'not migrated'
     elif steps.get('Install the tool') == 'skipped':
-        text = 'not tested (not public)'
+        text = 'not public'
     else:
         text = job['conclusion']
     return f"[{text}]({job['html_url']})"
 
+def _todo_cell( r ):
+    """The number of items in the TODO file on the main branch of a (public)
+    repository, linked to the file, or '–'."""
+    import urllib.error
+    import urllib.request
+    if not r['public']:
+        return '–'
+    url = f"{r['url']}/-/raw/main/{TODO_FILE_NAME}"
+    try:
+        with urllib.request.urlopen( url, timeout = 30 ) as f:
+            text = f.read().decode( 'utf-8', errors = 'replace' )
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return '–'  # No TODO file
+        print( f'Note: could not get {url} ({e})' )
+        return '?'
+    except Exception as e:  # noqa: BLE001
+        print( f'Note: could not get {url} ({e})' )
+        return '?'
+    link = f"{r['url']}/-/blob/main/{TODO_FILE_NAME}"
+    try:
+        n = len( parse_todo( text ) )
+    except ValueError:
+        return f'[⚠ invalid]({link})'
+    return f'[{n}]({link})'
+
 def _write_repos_table():
     run, jobs = _latest_test_run()
-    lines = [ '| Instrument | Description | Standard layout'
-              ' | Test with this tool | Own CI (main) |',
+    lines = [ '| Instrument | Test with this tool | Own CI (main) | TODO'
+              ' | Description |',
               '|---|---|---|---|---|' ]
     for r in repos():
         result = ( _test_result( jobs.get(r['name']) ) if jobs is not None
-                   else 'no results available' )
+                   else 'no results' )
         badge = ( f"[![pipeline status]({r['url']}/badges/main/pipeline.svg)]"
                   f"({r['url']}/-/pipelines?ref=main)" if r['public'] else '–' )
-        lines.append( f"| [{r['name']}]({r['url']}) | {r['description']}"
-                      f" | {'yes' if r['standard_layout'] else 'no'}"
-                      f" | {result} | {badge} |" )
+        lines.append( f"| [{r['name']}]({r['url']}) | {result} | {badge}"
+                      f" | {_todo_cell( r )} | {r['description']} |" )
     if run is not None:
         lines += [ '', f"Test results from the [run of {run['created_at'][:10]}]"
                    f"({run['html_url']}) (commit {run['head_sha'][:7]} of the"

@@ -19,6 +19,8 @@ def summary(info):
     indent = ' '*len('  Instrument modes:  ')
     for name,path in info['setups'].items():
         print(f"{indent}{name.ljust(n+1)}: {prel(path)}")
+    if info['todo_items'] is not None:
+        print(f"  TODO items:         {info['todo_items']}")
     if info['helper_modules']:
         print(f"  Helper modules:     {', '.join(info['helper_modules'])}")
     if info['pypkgname'] is not None:
