@@ -85,7 +85,7 @@ TODO items for mcstas-ess-instr-citool
   workflow warns when a repository marked as not using it passes the
   check).
 
-* Non-public instrument repositories (BEER, ESTIA, FREIA, HEIMDAL, T-REX)
+* Non-public instrument repositories (ESTIA, FREIA, HEIMDAL, T-REX)
   are skipped by the workflow instrument-repos.yml, unless the repository
   secret DMSC_GITLAB_TOKEN holds a GitLab access token which can read them
   (e.g. a group access token of dmsc-instrumentmodels with the
