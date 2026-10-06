@@ -59,6 +59,8 @@ make -C doc html
 The result is in `doc/build/html/`. The workflow `.github/workflows/doc.yml`
 builds the documentation (treating warnings as errors) and checks its links
 for every push and pull request. The workflow `publish-doc.yml` publishes it
-on GitHub Pages, for pushes to `main` and version tags, when the repository
+on GitHub Pages, for pushes to `main` and version tags, and after each run of
+`instrument-repos.yml` (since [](dmsc_repos.md) shows the results of its
+latest run, from the GitHub API), when the repository
 variable `PUBLISH_DOC` is set to `true` (and GitHub Pages is enabled in the
 repository settings, with "GitHub Actions" as the source).

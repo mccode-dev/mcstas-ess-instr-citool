@@ -18,8 +18,7 @@ pip install git+https://github.com/tkittel/dmsc-instr-repo-prototype.git
 mcstas-ess-instr-citool -a runci .
 ```
 
-The source code, the issue tracker and example projects are in the GitHub
-repository
+The source code and the issue tracker are in the GitHub repository
 [tkittel/dmsc-instr-repo-prototype](https://github.com/tkittel/dmsc-instr-repo-prototype).
 
 ```{toctree}
@@ -29,7 +28,13 @@ layout
 usage
 instrument_repos
 dmsc_repos
-examples
 cmdline
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: Development
+
 development
+examples
 ```

@@ -67,7 +67,6 @@ by the tests do not end up in the project). The python packages of the
 project are made available with `PYTHONPATH`, without installing anything:
 `instrpy/` (for the `instrpy` layout), and `extra/` and `extra/src/` (if
 present), so e.g. an analysis package in `extra/` can be used by the tests.
-See the `ExPyExtra` example (see [](examples.md)).
 
 ## Local components and data files
 
@@ -81,15 +80,14 @@ Project-specific components and data files are placed in two subdirectories
 * `localdata/`: data files of the following types only: `*.ncmat` (NCrystal
   materials, preferred for samples), `*.laz`, `*.lau`, `*.hkl`, `*.cif`,
   `*.rfl`, `*.trm`, `*.ref`, `*.sqw`, `*.dat`, `*.txt`, `*.off`, `*.ply`,
-  `*.mcpl` and `*.mcpl.gz` (see [`localfiles.py`](https://github.com/tkittel/dmsc-instr-repo-prototype/blob/main/src/mcstas_ess_instr_citool/localfiles.py)).
+  `*.mcpl` and `*.mcpl.gz`.
 
 Neither may contain subdirectories. Files in `localdata/` must not have the
 same names as data files of McStas (e.g. `Al.laz`) or materials of the
 NCrystal standard library (e.g. `Al_sg225.ncmat`), compared
 case-insensitively, since it would be easy to confuse them (this is checked by
 `runci`). The instruments refer to these files as
-follows (see the `ExInstrLocalFiles` and `ExPyLocalFiles` examples in
-[](examples.md)):
+follows:
 
 * For the `instr` layout, a `SEARCH "localcomps"` statement in the `TRACE`
   section lets McStas find the local components (and the C libraries they

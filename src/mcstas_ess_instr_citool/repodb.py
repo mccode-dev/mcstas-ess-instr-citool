@@ -31,7 +31,7 @@ REPOS = [
     dict( name = "HEIMDAL", repo = "heimdal",
           description = "Hybrid diffractometer",
           standard_layout = False, public = False ),
-    dict( name = "LOKI", repo = "loki",
+    dict( name = "LOKI", repo = "LOKI",
           description = "Broadband small-angle neutron scattering",
           standard_layout = True, public = True ),
     dict( name = "MAGiC", repo = "magic",

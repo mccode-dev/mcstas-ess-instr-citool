@@ -1,7 +1,8 @@
 name: Publish documentation
 
 # Builds the documentation and publishes it on GitHub Pages, for pushes to
-# main and version tags (vX.Y.Z). This is only done when the repository
+# main and version tags (vX.Y.Z), and after each run of the workflow testing
+# the instrument repositories (whose results the documentation shows). This is only done when the repository
 # variable PUBLISH_DOC is "true", which requires that GitHub Pages is
 # enabled in the repository settings, with "GitHub Actions" as the source.
 on:
@@ -9,10 +10,15 @@ on:
     branches: [main]
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_run:
+    workflows: ["Instrument repositories"]
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read # for the test results of the instrument repositories
   pages: write
   id-token: write
 
@@ -41,6 +47,10 @@ jobs:
       - name: Install the tool and the documentation requirements
         run: python -m pip install . -r doc/requirements.txt
       - name: Build documentation
+        # (The token is used for the test results of the instrument
+        # repositories, from the GitHub API.)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make -C doc html SPHINXOPTS="-W --keep-going"
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5

@@ -370,7 +370,8 @@ The documentation in `doc/` (Markdown, with
 [MyST](https://myst-parser.readthedocs.io/)) is built with
 [Sphinx](https://www.sphinx-doc.org/). It covers the same topics as this
 README, plus a command line reference and the list of instrument
-repositories, which are generated from the tool (so it must be installed):
+repositories with their test results, which are generated from the tool (so
+it must be installed):
 
 ```
 pip install . -r doc/requirements.txt
@@ -381,7 +382,9 @@ The workflow `.github/workflows/doc.yml` builds the documentation (treating
 warnings as errors) and checks its links for every push and pull request.
 The workflow `publish-doc.yml` publishes it on GitHub Pages
 (<https://tkittel.github.io/dmsc-instr-repo-prototype/>), for pushes to
-`main` and version tags, when the repository variable `PUBLISH_DOC` is set
+`main` and version tags, and after each run of `instrument-repos.yml` (the
+page about the instrument repositories shows the results of its latest run,
+from the GitHub API, and the CI status badges of the repositories), when the repository variable `PUBLISH_DOC` is set
 to `true` (and GitHub Pages is enabled in the repository settings, with
 "GitHub Actions" as the source).
 
