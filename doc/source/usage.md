@@ -9,9 +9,9 @@ pip install git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
 or with `pip install -e .` from a clone of the repository.
 `mcstas-ess-instr-citool --version` shows the installed version (see
 [](development.md#versions-and-releases)). The `generate`,
-`generatepy` and `runci` actions need McStas 3.9.0 or newer (with
-McStasScript 0.0.94 or newer for `instrpy` projects), for example from a conda
-environment created with:
+`generatepy`, `modelcheck` and `runci` actions need McStas 3.9.0 or newer
+(with McStasScript 0.0.94 or newer), for example from a conda environment
+created with:
 
 ```
 conda create -n mcstas -c conda-forge --override-channels "mcstas>=3.9.0" "mcstasscript>=0.0.94"
@@ -50,13 +50,16 @@ failing with an error message on any violation. Available actions:
   removed from the output, so it is reproducible. The generated `make()`
   writes the instrument into McStasScript's default `input_path` (the working
   directory), not into the python package.
+* `modelcheck`: check the instruments against the rules for the models,
+  e.g. that all instrument parameters have default values (see
+  [](layout.md#model-checks)).
 * `repos`, `repos-json`: list the instrument repositories at DMSC (see
   [](dmsc_repos.md)), as a table or as JSON. These
   actions take no `PROJECT_DIR`.
 * `runci`: check that local components do not shadow McStas components, and
   that local data files do not have the names of McStas data files or
   NCrystal standard library materials, then
-  run `generate`, followed by `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
+  run the model checks (as `modelcheck`), `generate`, and `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
   line, and all examples must pass. `--noplots` is also given, so `mctest`
   does not plot the output of the tests, which can take much longer than the
   tests for instruments with many monitors. Finally, if the project has an

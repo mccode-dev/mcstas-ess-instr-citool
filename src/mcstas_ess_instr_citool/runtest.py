@@ -25,8 +25,12 @@ def runtest( info, outdir, mpi = None ):
     from .localfiles import check_local_components, check_local_data
     from .util import mcstas_info
     mctest_cmd = mcstas_info()['cmd']['mctest']
+    from .modelcheck import modelcheck
     check_local_components( info )
     check_local_data( info )
+    modeldir = outdir.joinpath('modelcheck')
+    modeldir.mkdir()
+    modelcheck( info, modeldir )
     instrdir = generate( info, outdir )
     testdir = outdir.joinpath('tests').absolute().resolve()
     cmd = mctest_args( instrdir, testdir, mpi )

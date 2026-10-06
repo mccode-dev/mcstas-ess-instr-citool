@@ -4,8 +4,8 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-ACTIONS = ["generate", "generatepy", "runci", "list", "check", "json", "pprint",
-           "repos", "repos-json"]
+ACTIONS = ["generate", "generatepy", "modelcheck", "runci", "list", "check",
+           "json", "pprint", "repos", "repos-json"]
 # Actions which do not need a project directory:
 NO_PROJECT_ACTIONS = ["repos", "repos-json"]
 DEFAULT_ACTION = "list"
@@ -184,6 +184,10 @@ def _run( args ):
         from .generate import generate
         with OutDirMgr(args.outdir) as outdir:
             generate(info,outdir)
+    elif args.action=='modelcheck':
+        from .modelcheck import modelcheck
+        with OutDirMgr(args.outdir) as outdir:
+            modelcheck(info,outdir)
     else:
         assert args.action=='runci'
         from .runtest import runtest

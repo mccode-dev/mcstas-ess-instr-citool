@@ -121,6 +121,30 @@ follows:
 mode names differing only in case are not allowed. Hidden files (names
 starting with `.`) and backup files (names ending with `~`) are ignored.
 
+## Model checks
+
+The `modelcheck` action (which is also part of `runci`) checks the
+instruments of all modes against the following rules, without compiling or
+running them:
+
+* `parameter-defaults`: all instrument parameters must have default values
+  (so the instruments can run without specifying any parameters, e.g. in
+  tests and when combined with other tools).
+* `relative-references`: `AT` and `ROTATED` of each component must be
+  `RELATIVE` to a component defined earlier in the instrument (or `ABSOLUTE`
+  or `PREVIOUS`).
+
+For the `instrpy` layout, the rules are checked on the instrument object
+made by the `make()` function of each mode. For the `instr` layout, each
+`.instr` file is first processed by the McStas code generator, which reports
+errors in the instrument (e.g. a reference to an unknown component) and
+parameters without default values. The files are then translated with
+`mcstas-pygen` (as for `generatepy`), and the rules are checked on the
+resulting instrument objects. A string parameter without a default value is
+only reported as such from McStas 3.9.2. With older versions, the check
+reports that one of the string parameters with no default value or the
+default value `""` is the problem.
+
 ## The TODO file
 
 The optional `TODO` file lists the open issues of the project, in a simple

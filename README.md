@@ -128,6 +128,30 @@ follows (see the `ExInstrLocalFiles` and `ExPyLocalFiles` examples):
 mode names differing only in case are not allowed. Hidden files (names
 starting with `.`) and backup files (names ending with `~`) are ignored.
 
+### Model checks
+
+The `modelcheck` action (which is also part of `runci`) checks the
+instruments of all modes against the following rules, without compiling or
+running them:
+
+* `parameter-defaults`: all instrument parameters must have default values
+  (so the instruments can run without specifying any parameters, e.g. in
+  tests and when combined with other tools).
+* `relative-references`: `AT` and `ROTATED` of each component must be
+  `RELATIVE` to a component defined earlier in the instrument (or `ABSOLUTE`
+  or `PREVIOUS`).
+
+For the `instrpy` layout, the rules are checked on the instrument object
+made by the `make()` function of each mode. For the `instr` layout, each
+`.instr` file is first processed by the McStas code generator, which reports
+errors in the instrument (e.g. a reference to an unknown component) and
+parameters without default values. The files are then translated with
+`mcstas-pygen` (as for `generatepy`), and the rules are checked on the
+resulting instrument objects. A string parameter without a default value is
+only reported as such from McStas 3.9.2. With older versions, the check
+reports that one of the string parameters with no default value or the
+default value `""` is the problem.
+
 ### The TODO file
 
 The optional `TODO` file lists the open issues of the project, in a simple
@@ -220,9 +244,9 @@ dependencies:
 Install with `pip install -e .` (Python 3.11 or newer).
 `mcstas-ess-instr-citool --version` shows the installed version (see
 [Versions and releases](#versions-and-releases)). The `generate`,
-`generatepy` and `runci` actions need McStas 3.9.0 or newer (with
-McStasScript 0.0.94 or newer for `instrpy` projects), for example from a conda
-environment created with:
+`generatepy`, `modelcheck` and `runci` actions need McStas 3.9.0 or newer
+(with McStasScript 0.0.94 or newer), for example from a conda environment
+created with:
 
 ```
 conda create -n mcstas -c conda-forge --override-channels "mcstas>=3.9.0" "mcstasscript>=0.0.94"
@@ -261,13 +285,16 @@ failing with an error message on any violation. Available actions:
   removed from the output, so it is reproducible. The generated `make()`
   writes the instrument into McStasScript's default `input_path` (the working
   directory), not into the python package.
+* `modelcheck`: check the instruments against the rules for the models,
+  e.g. that all instrument parameters have default values (see
+  [model checks](#model-checks)).
 * `repos`, `repos-json`: list the instrument repositories at DMSC (see
   [below](#instrument-repositories-at-dmsc)), as a table or as JSON. These
   actions take no `PROJECT_DIR`.
 * `runci`: check that local components do not shadow McStas components, and
   that local data files do not have the names of McStas data files or
   NCrystal standard library materials, then
-  run `generate`, followed by `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
+  run the model checks (as `modelcheck`), `generate`, and `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
   line, and all examples must pass. `--noplots` is also given, so `mctest`
   does not plot the output of the tests, which can take much longer than the
   tests for instruments with many monitors. Finally, if the project has an
