@@ -118,7 +118,7 @@ def modelcheck( info, workdir, timeout = DEFAULT_TIMEOUT ):
 
     failures = []
     for mode, path in info['setups'].items():
-        relpath = Path(path).relative_to(projdir)
+        relpath = Path(path).relative_to(projdir).as_posix()
         rundir = workdir / 'run' / mode
         rundir.mkdir(parents=True)
         print(f"Model check of {relpath} (mode {mode})", flush=True)
@@ -147,7 +147,7 @@ def _check_instr_files( info, projdir ):
     string_params = []
     for mode, path in info['setups'].items():
         path = Path(path)
-        relpath = path.relative_to(projdir)
+        relpath = path.relative_to(projdir).as_posix()
         print(f"Checking {relpath} (mode {mode}) with McStas", flush=True)
         with tempfile.TemporaryDirectory() as tmpdir:
             cfile = Path(tmpdir) / f'{path.stem}.c'
