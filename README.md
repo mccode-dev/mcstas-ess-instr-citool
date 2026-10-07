@@ -390,6 +390,49 @@ runner. Without this, each job put about 5 GB and 180,000 files into its
 project directory, which filled the disk of a runner (see
 [issue #2](https://github.com/mccode-dev/mcstas-ess-instr-citool/issues/2)).
 
+For faster feedback, in particular for instruments with long tests, the
+pipeline can be split into two stages: first `runcifast` (examples with only
+100 neutrons, stopping at the first failure), and only if that passes the full
+`runci` (see
+[issue #3](https://github.com/mccode-dev/mcstas-ess-instr-citool/issues/3)).
+The common setup is then shared by both jobs:
+
+```
+stages:
+  - quick
+  - full
+
+.citool:
+  tags:
+    - python311  # as used by other ESS instrument repositories
+  variables:
+    MAMBA_ROOT_PREFIX: "$CI_PROJECT_DIR/.micromamba"
+  before_script:
+    - export CONDA_PKGS_DIRS="$HOME/.cache/mcstas-ess-instr-citool/conda-pkgs"
+    - curl -Ls -o .micromamba/bin/micromamba --create-dirs https://github.com/mamba-org/micromamba-releases/releases/latest/download/micromamba-linux-64
+    - chmod +x .micromamba/bin/micromamba
+    - .micromamba/bin/micromamba create -y -q -n ci -f conda.yml
+    - .micromamba/bin/micromamba run -n ci pip install -q git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
+  after_script:
+    - rm -rf .micromamba
+
+runcifast:
+  extends: .citool
+  stage: quick
+  script:
+    - .micromamba/bin/micromamba run -n ci mcstas-ess-instr-citool -a runcifast .
+
+runci:
+  extends: .citool
+  stage: full
+  script:
+    - .micromamba/bin/micromamba run -n ci mcstas-ess-instr-citool -a runci .
+```
+
+The jobs of the second stage only run when those of the first one pass. Each
+job creates its own environment, which is quick since the packages come from
+the shared cache.
+
 ## Instrument repositories at DMSC
 
 The tool contains a database of the instrument repositories at DMSC (in the
