@@ -71,6 +71,16 @@ failing with an error message on any violation. Available actions:
   the tests faster, since compilation with MPI takes longer, and the default
   `mctest` simulations are short.
 
+* `runcifast`: a quicker version of `runci`, for fast feedback while
+  developing: the same checks, but each `%Example` test is run with only 100
+  neutrons, and only has to compile and run without crashing (its results are
+  not compared with the expected values, which they will not match with fewer
+  neutrons). The instruments are tested one at a time, stopping at the first
+  failure, and the tests in `extra_pytests/` are not run. `--mpi` can be
+  used as for `runci`.
+* `checkbuild`: like `runcifast`, but the instruments are only compiled, not
+  run (with 0 neutrons).
+
 If `-o OUTDIR` is not given (it must be empty or not exist), a temporary
 directory is used and cleaned up afterwards.
 
