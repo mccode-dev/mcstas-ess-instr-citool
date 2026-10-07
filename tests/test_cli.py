@@ -1,3 +1,4 @@
+import shutil
 import json
 
 import pytest
@@ -111,7 +112,7 @@ def test_mpi_only_for_runci(capsys):
     with pytest.raises(SystemExit):
         main(["-a", "generate", "--mpi", "2",
               str(EXAMPLES_DIR / "ExInstrBasic")])
-    assert "--mpi can only be used with action runci" in capsys.readouterr().err
+    assert "--mpi can only be used with the actions runci" in capsys.readouterr().err
 
 
 def test_mctest_args():
@@ -197,3 +198,36 @@ def test_project_dir_needed_or_not(argv, msg, capsys):
     with pytest.raises(SystemExit):
         main(argv)
     assert msg in capsys.readouterr().err
+
+
+needs_mcstas = pytest.mark.skipif(
+    not all(shutil.which(c) for c in ["mcstas", "mcrun", "mctest"]),
+    reason="McStas not available",
+)
+
+
+@needs_mcstas
+@pytest.mark.parametrize("action", ["checkbuild", "runcifast"])
+def test_quick_test_actions(action, tmp_path, capsys):
+    main(["-a", action, "-o", str(tmp_path / "out"),
+          str(EXAMPLES_DIR / "ExInstrBasic")])
+    out = capsys.readouterr().out
+    assert "All 3 instruments OK" in out
+
+
+@needs_mcstas
+def test_runcifast_stops_at_first_failure(tmp_path, capsys):
+    import re
+    from mcstas_ess_instr_citool.errors import CheckFailed
+    proj = tmp_path / "ExInstrBasic"
+    shutil.copytree(EXAMPLES_DIR / "ExInstrBasic", proj)
+    f = proj / "instr" / "ExInstrBasic_modeBAR.instr"
+    #Make the instrument crash at runtime (but compile):
+    f.write_text(re.sub(r"^(INITIALIZE\s*\n%\{)",
+                        r"\1\n  exit(1);", f.read_text(), count=1,
+                        flags=re.M))
+    with pytest.raises((CheckFailed, SystemExit)):
+        main(["-a", "runcifast", "-o", str(tmp_path / "out"), str(proj)])
+    cap = capsys.readouterr()
+    assert "ExInstrBasic_modeBAR failed" in cap.out + cap.err
+    assert "(3/3)" not in cap.out

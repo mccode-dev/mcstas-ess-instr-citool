@@ -305,6 +305,15 @@ failing with an error message on any violation. Available actions:
   tests that the instruments work with MPI. It does not necessarily make
   the tests faster, since compilation with MPI takes longer, and the default
   `mctest` simulations are short.
+* `runcifast`: a quicker version of `runci`, for fast feedback while
+  developing: the same checks, but each `%Example` test is run with only 100
+  neutrons, and only has to compile and run without crashing (its results are
+  not compared with the expected values, which they will not match with fewer
+  neutrons). The instruments are tested one at a time, stopping at the first
+  failure, and the tests in `extra_pytests/` are not run. `--mpi` can be
+  used as for `runci`.
+* `checkbuild`: like `runcifast`, but the instruments are only compiled, not
+  run (with 0 neutrons).
 
 If `-o OUTDIR` is not given (it must be empty or not exist), a temporary
 directory is used and cleaned up afterwards.
@@ -335,6 +344,9 @@ pip install git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git
 mcstas-ess-instr-citool -a runci .
 ```
 
+While developing, `-a runcifast` (or `-a checkbuild`) gives faster feedback,
+since it runs each example with only 100 neutrons (or only compiles the
+instruments), and stops at the first failure.
 `mcstas-ess-instr-citool -a check .` quickly validates the layout, and
 `mcstas-ess-instr-citool .` shows a summary of the project. If the working
 copy contains temporary files which the layout does not allow (e.g. output

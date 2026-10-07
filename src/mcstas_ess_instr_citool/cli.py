@@ -4,8 +4,13 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-ACTIONS = ["generate", "generatepy", "modelcheck", "runci", "list", "check",
-           "json", "pprint", "repos", "repos-json"]
+ACTIONS = ["generate", "generatepy", "modelcheck", "runci", "runcifast",
+           "checkbuild", "list", "check", "json", "pprint", "repos",
+           "repos-json"]
+# Actions running the tests (runci as in CI, and two quicker ones for fast
+# feedback while developing, which stop at the first failure):
+TEST_ACTIONS = { "runci" : "full", "runcifast" : "fast",
+                 "checkbuild" : "build" }
 # Actions which do not need a project directory:
 NO_PROJECT_ACTIONS = ["repos", "repos-json"]
 DEFAULT_ACTION = "list"
@@ -73,7 +78,8 @@ def make_parser(prog=None):
     parser.add_argument('--mpi', type=mpi_value, metavar='N', default=None,
                         help=('Compile and run the instruments with MPI, using'
                               ' N processes (or "auto" for the number of'
-                              ' available processors). Only for action runci.'
+                              ' available processors). Only for the actions'
+                              ' runci, runcifast and checkbuild.'
                               ' Default is to not use MPI.'))
 
     parser.add_argument('--lenient', action='store_true',
@@ -99,8 +105,9 @@ def parse_args(argv=None,prog=None):
     if args.lenient and os.environ.get('CI'):
         parser.error('--lenient is not allowed in CI (the CI environment'
                      ' variable is set)')
-    if args.mpi is not None and args.action != 'runci':
-        parser.error('--mpi can only be used with action runci')
+    if args.mpi is not None and args.action not in TEST_ACTIONS:
+        parser.error('--mpi can only be used with the actions runci,'
+                     ' runcifast and checkbuild')
     if args.action == 'generatepy' and args.outdir is None:
         parser.error('--outdir is required for action generatepy')
     if args.action in NO_PROJECT_ACTIONS:
@@ -189,10 +196,11 @@ def _run( args ):
         with OutDirMgr(args.outdir) as outdir:
             modelcheck(info,outdir)
     else:
-        assert args.action=='runci'
+        assert args.action in TEST_ACTIONS
         from .runtest import runtest
         with OutDirMgr(args.outdir) as outdir:
-            runtest(info,outdir,mpi=args.mpi)
+            runtest(info,outdir,mpi=args.mpi,
+                    mode=TEST_ACTIONS[args.action])
     if info['ignored']:
         print(f"WARNING: {len(info['ignored'])} unexpected file(s) or"
               " directories were ignored (--lenient). CI will fail on them"
