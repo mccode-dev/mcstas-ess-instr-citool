@@ -30,7 +30,7 @@ REPOS = [
           standard_layout = True, public = False ),
     dict( name = "HEIMDAL", repo = "heimdal",
           description = "Hybrid diffractometer",
-          standard_layout = False, public = False ),
+          standard_layout = False, public = True ),
     dict( name = "LOKI", repo = "LOKI",
           description = "Broadband small-angle neutron scattering",
           standard_layout = True, public = True ),
