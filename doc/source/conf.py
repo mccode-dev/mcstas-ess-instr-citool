@@ -48,10 +48,14 @@ html_context = {
 
 GITHUB_REPO = 'mccode-dev/mcstas-ess-instr-citool'
 
+#The first job of instrument-repos.yml, which checks that git.esss.dk is
+#available (runs where it failed did not test anything):
+GITLAB_CHECK_JOB = 'GitLab server available'
+
 def _latest_test_run():
     """The latest completed (and not cancelled) run of instrument-repos.yml on
-    main, and its jobs, or (None, None) if they can not be obtained (e.g.
-    without network access)."""
+    main in which git.esss.dk was available, and its jobs, or (None, None) if
+    they can not be obtained (e.g. without network access)."""
     import json
     import os
     import urllib.request
@@ -68,14 +72,18 @@ def _latest_test_run():
                     '?branch=main&status=completed&per_page=20' )
         runs = [ r for r in runs['workflow_runs']
                  if r['conclusion'] in ('success', 'failure') ]
-        if not runs:
-            return None, None
-        run = runs[0]
-        jobs = get( f"{api}/runs/{run['id']}/jobs?per_page=100" )['jobs']
+        for run in runs:
+            jobs = { j['name']: j for j in
+                     get( f"{api}/runs/{run['id']}/jobs?per_page=100" )['jobs'] }
+            check = jobs.get( GITLAB_CHECK_JOB )
+            #(Older runs do not have the check job.)
+            if check is None or check['conclusion'] == 'success':
+                return run, jobs
+            print( f"Note: ignoring run {run['id']} of instrument-repos.yml,"
+                   ' in which git.esss.dk was not available' )
     except Exception as e:  # noqa: BLE001
         print( f'Note: could not get the latest test results ({e})' )
-        return None, None
-    return run, { j['name']: j for j in jobs }
+    return None, None
 
 def _test_result( job ):
     """Summary of the job testing a repository in instrument-repos.yml."""

@@ -45,6 +45,11 @@ jobs:
           python-version: "3.14"
       - name: Install the tool and the documentation requirements
         run: python -m pip install . -r doc/requirements.txt
+      # The documentation shows information from git.esss.dk (e.g. the TODO
+      # files of the repositories). If it is down (and stays down for 20
+      # minutes), nothing is deployed, so the previous version stays online:
+      - name: Wait for git.esss.dk (up to 20 minutes)
+        run: bash .github/scripts/wait-for-url.sh https://git.esss.dk/ 60 20
       - name: Build documentation
         # (The token is used for the test results of the instrument
         # repositories, from the GitHub API.)

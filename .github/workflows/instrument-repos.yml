@@ -8,6 +8,10 @@ name: Instrument repositories
 # Repositories which are not public can only be tested if the repository
 # secret DMSC_GITLAB_TOKEN holds a GitLab access token (with read_repository
 # access to them); otherwise they are skipped.
+#
+# If git.esss.dk is down (and stays down for 20 minutes), no repositories are
+# tested, and the documentation ignores the run (see _latest_test_run in
+# doc/source/conf.py, which looks for the name of the first job).
 on:
   push:
     branches: [main]
@@ -24,8 +28,17 @@ concurrency:
 
 jobs:
 
+  gitlab:
+    name: GitLab server available
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Wait for git.esss.dk (up to 20 minutes)
+        run: bash .github/scripts/wait-for-url.sh https://git.esss.dk/ 60 20
+
   list:
     name: List the repositories
+    needs: gitlab
     runs-on: ubuntu-latest
     outputs:
       repos: ${{ steps.list.outputs.repos }}
