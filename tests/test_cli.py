@@ -1,5 +1,5 @@
-import shutil
 import json
+import shutil
 
 import pytest
 
@@ -218,6 +218,7 @@ def test_quick_test_actions(action, tmp_path, capsys):
 @needs_mcstas
 def test_runcifast_stops_at_first_failure(tmp_path, capsys):
     import re
+
     from mcstas_ess_instr_citool.errors import CheckFailed
     proj = tmp_path / "ExInstrBasic"
     shutil.copytree(EXAMPLES_DIR / "ExInstrBasic", proj)
