@@ -1,0 +1,13 @@
+# Keeps the actions used in the workflows up to date (Dependabot opens pull
+# requests for new versions). The actions are pinned to the full commit SHAs
+# of their releases, with the version as a comment (e.g. "uses:
+# actions/checkout@<sha> # v7.0.1"), so a moved or hijacked tag can not change
+# them. Dependabot updates both the SHA and the comment. Please pin new actions
+# in the same way.
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

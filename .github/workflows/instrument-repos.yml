@@ -32,7 +32,7 @@ jobs:
     name: GitLab server available
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Wait for git.esss.dk (up to 20 minutes)
         run: bash .github/scripts/wait-for-url.sh https://git.esss.dk/ 60 20
 
@@ -43,8 +43,8 @@ jobs:
     outputs:
       repos: ${{ steps.list.outputs.repos }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
       - name: Install the tool
@@ -70,7 +70,7 @@ jobs:
       REPO_PUBLIC: ${{ matrix.repo.public }}
       GITLAB_TOKEN: ${{ secrets.DMSC_GITLAB_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: tool
           # For the version of the tool (from the git tags):
@@ -96,7 +96,7 @@ jobs:
 
       # Standard layout: test as the CI of the repository does, in the conda
       # environment from its conda.yml (with this version of the tool):
-      - uses: mamba-org/setup-micromamba@v3
+      - uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39 # v3.2.1
         if: steps.clone.outputs.cloned == 'true' && matrix.repo.standard_layout
         with:
           environment-file: repo/conda.yml
@@ -115,7 +115,7 @@ jobs:
 
       # Not (yet) moved to the standard layout: only report the result of
       # the layout check:
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         if: steps.clone.outputs.cloned == 'true' && !matrix.repo.standard_layout
         with:
           python-version: "3.14"
