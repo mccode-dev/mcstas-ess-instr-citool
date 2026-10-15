@@ -39,7 +39,7 @@ REPOS = [
           standard_layout = True, public = True ),
     dict( name = "MAGiC", repo = "magic",
           description = "Magnetism single crystal diffractometer",
-          standard_layout = False, public = True ),
+          standard_layout = True, public = True ),
     dict( name = "MIRACLES", repo = "miracles",
           description = "Time-of-flight backscattering spectrometer",
           standard_layout = False, public = True ),
