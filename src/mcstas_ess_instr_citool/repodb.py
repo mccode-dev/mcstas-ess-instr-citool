@@ -21,7 +21,7 @@ GITLAB_GROUP_URL = "https://git.esss.dk/dmsc-instrumentmodels"
 REPOS = [
     dict( name = "BEER", repo = "beer",
           description = "Engineering diffractometer",
-          standard_layout = False, public = True ),
+          standard_layout = True, public = True ),
     dict( name = "BIFROST", repo = "bifrost",
           description = "Extreme environment spectrometer",
           standard_layout = False, public = True ),
