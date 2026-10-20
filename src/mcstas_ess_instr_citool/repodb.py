@@ -54,7 +54,7 @@ REPOS = [
           standard_layout = True, public = True ),
     dict( name = "T-REX", repo = "t-rex",
           description = "Bispectral direct geometry spectrometer",
-          standard_layout = False, public = False ),
+          standard_layout = False, public = True ),
     dict( name = "TBL", repo = "tbl",
           description = "Test beamline",
           standard_layout = True, public = True ),
