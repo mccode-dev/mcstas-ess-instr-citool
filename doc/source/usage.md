@@ -62,7 +62,9 @@ failing with an error message on any violation. Available actions:
   run the model checks (as `modelcheck`), `generate`, and `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
   line, and all examples must pass. `--noplots` is also given, so `mctest`
   does not plot the output of the tests, which can take much longer than the
-  tests for instruments with many monitors. Finally, if the project has an
+  tests for instruments with many monitors. The `%Example` tests run with
+  the default number of neutrons of `mctest` (1e6), unless `ncount` is set in
+  the `citool.toml` file of the project. Finally, if the project has an
   `extra_pytests/` directory, the tests in it are run with `pytest` (see
   [](layout.md#tests-in-extra_pytests)).
   With `--mpi N` (or `--mpi auto` for the number of available processors),

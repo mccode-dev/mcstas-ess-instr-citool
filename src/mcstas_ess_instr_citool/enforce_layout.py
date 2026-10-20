@@ -8,6 +8,7 @@ import tomllib  # Python 3.11+ only
 
 from .errors import ProjectError
 from .localfiles import subdir_patterns
+from .settings import SETTINGS_FILE_NAME, parse_settings
 from .todo import TODO_FILE_NAME, parse_todo
 
 
@@ -46,8 +47,8 @@ class _Unexpected:
 # Directories and files allowed at the top level of a project (in addition to
 # hidden files like .gitignore or .gitlab-ci.yml, which are ignored):
 ROOT_DIRS = ("instr", "instrpy", "extra", "extra_pytests")
-ROOT_FILE_PATTERNS = ("conda.yml", "README*", TODO_FILE_NAME, "LICENSE*", "CHANGELOG*",
-                      "CONTRIBUTING*")
+ROOT_FILE_PATTERNS = ("conda.yml", "README*", TODO_FILE_NAME, SETTINGS_FILE_NAME,
+                      "LICENSE*", "CHANGELOG*", "CONTRIBUTING*")
 
 def check_root_entries(project_dir: str, unexpected: _Unexpected | None = None) -> None:
     """Raise ValueError if the top level of the project contains anything
@@ -100,8 +101,9 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
     The top level of project_dir may only contain conda.yml, the instr/ or
     instrpy/ directory, the optional directories extra/ (anything, with no
     rules) and extra_pytests/ (tests run with pytest), and files named
-    README*, LICENSE*, CHANGELOG* or CONTRIBUTING*, and a TODO file (which
-    must follow the format described in todo.py). If extra_pytests/ exists,
+    README*, LICENSE*, CHANGELOG* or CONTRIBUTING*, a TODO file (which
+    must follow the format described in todo.py), and a citool.toml file
+    with settings (see settings.py). If extra_pytests/ exists,
     pytest must be listed in conda.yml.
 
     Hidden files (names starting with '.') and backup files (names ending
@@ -136,10 +138,16 @@ def enforce_instr_layout(project_dir: str, lenient: bool = False) -> dict:
     if os.path.isfile(todo_path):
         with open(todo_path, encoding="utf-8", errors="replace") as f:
             todo_items = len(parse_todo(f.read(), filename=todo_path))
+    settings_path = os.path.join(project_dir, SETTINGS_FILE_NAME)
+    settings = parse_settings("")
+    if os.path.isfile(settings_path):
+        with open(settings_path, encoding="utf-8", errors="replace") as f:
+            settings = parse_settings(f.read(), filename=settings_path)
     extra_dir = os.path.join(project_dir, "extra")
     extra_pytests_dir = os.path.join(project_dir, "extra_pytests")
     extras = {
         "todo_items": todo_items,
+        "settings": settings,
         "extra_dir": extra_dir if os.path.isdir(extra_dir) else None,
         "extra_pytests_dir": extra_pytests_dir if os.path.isdir(extra_pytests_dir) else None,
     }

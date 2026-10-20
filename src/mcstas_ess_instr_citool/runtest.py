@@ -5,12 +5,13 @@ import subprocess
 from .errors import CheckFailed, SetupError
 
 
-def mctest_args( instrdir, testdir, mpi = None ):
+def mctest_args( instrdir, testdir, mpi = None, ncount = None ):
     """Arguments for mctest. If mpi is an integer or "auto" (meaning the
     number of available processors), the instruments are compiled and run
-    with MPI, using that number of processes. With --noplots, mctest does not
-    plot the test output (which can take long for instruments with many
-    monitors, and is not looked at)."""
+    with MPI, using that number of processes. ncount is the number of
+    neutrons of each test (default: that of mctest). With --noplots, mctest
+    does not plot the test output (which can take long for instruments with
+    many monitors, and is not looked at)."""
     cmd = [ '--strict', '--noplots' ]
     if mpi is not None:
         if mpi == 'auto':
@@ -18,6 +19,8 @@ def mctest_args( instrdir, testdir, mpi = None ):
             mpi = get_nprocs()
         cmd += [ '--mpi', str(int(mpi)) ]
     cmd += [ '--local', str(instrdir), '--testdir', str(testdir) ]
+    if ncount is not None:
+        cmd += [ '--ncount', str(ncount) ]
     return cmd
 
 #Neutrons per %Example test in the quick modes (the results are not compared
@@ -46,7 +49,7 @@ def runtest( info, outdir, mpi = None, mode = 'full' ):
     testdir = outdir.joinpath('tests').absolute().resolve()
     if mode != 'full':
         return runtest_quick( mctest_cmd, instrdir, testdir, mpi, mode )
-    cmd = mctest_args( instrdir, testdir, mpi )
+    cmd = mctest_args( instrdir, testdir, mpi, info['settings']['ncount'] )
     print(f"Launching: mctest {shlex.join(cmd)}", flush=True)
     ec = subprocess.run( [ mctest_cmd ] + cmd,
                          check = False, capture_output = False )
@@ -91,7 +94,7 @@ def runtest_quick( mctest_cmd, instrdir, testdir, mpi, mode ):
     for i, ( name, d ) in enumerate(instruments):
         print(f'\n=== ({i+1}/{len(instruments)}) {name}: {what}', flush = True)
         itestdir = testdir.joinpath(name)
-        cmd = mctest_args( d, itestdir, mpi ) + [ '--ncount', str(ncount) ]
+        cmd = mctest_args( d, itestdir, mpi, ncount )
         print(f"Launching: mctest {shlex.join(cmd)}", flush=True)
         #The exit code is not used, since mctest fails when the results differ
         #from the expected values (as they do with fewer neutrons):

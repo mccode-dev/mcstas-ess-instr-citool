@@ -21,6 +21,8 @@ def summary(info):
         print(f"{indent}{name.ljust(n+1)}: {prel(path)}")
     if info['todo_items'] is not None:
         print(f"  TODO items:         {info['todo_items']}")
+    if info['settings']['ncount'] is not None:
+        print(f"  Neutrons per test:  {info['settings']['ncount']:g} (citool.toml)")
     if info['helper_modules']:
         print(f"  Helper modules:     {', '.join(info['helper_modules'])}")
     if info['pypkgname'] is not None:

@@ -55,7 +55,9 @@ An instrument project is a directory containing:
   `conda.yml`.
 * Optionally files named `README*`, `LICENSE*`, `CHANGELOG*` and
   `CONTRIBUTING*` (e.g. the contacts and contribution guidelines of the
-  project), and a `TODO` file (see [The TODO file](#the-todo-file)).
+  project), a `TODO` file (see [The TODO file](#the-todo-file)), and a
+  `citool.toml` file with settings (see
+  [The citool.toml file](#the-citooltoml-file)).
 * Nothing else, apart from hidden files and directories (names starting with
   `.`, e.g. `.gitignore` and `.gitlab-ci.yml`).
 
@@ -171,6 +173,20 @@ TODO items for the EXAMPLE model
 * Tests: only the monitors before the sample are tested. Consider:
   - a mode with a single crystal sample;
   - tests of the detectors.
+```
+
+## The citool.toml file
+
+The optional `citool.toml` file holds settings of the tool for the project,
+in TOML. The only setting is `ncount`, the number of neutrons of each
+`%Example` test in the full tests (`runci`), instead of the default of
+`mctest` (1e6). It is meant for models whose tests would otherwise take too
+long, and the expected values in the `%Example` lines must then be valid
+for that number of neutrons (within the 20% tolerance of `mctest`):
+
+```toml
+# Settings of mcstas-ess-instr-citool:
+ncount = 1e4
 ```
 
 ## The conda.yml file

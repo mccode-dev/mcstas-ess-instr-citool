@@ -91,8 +91,8 @@ def test_stray_file(copy_example):
 
 def test_root_allowed_entries(copy_example):
     d = copy_example("ExInstrBasic")
-    for f in ["README.md", "README", "TODO", "LICENSE", "CHANGELOG.md",
-              "CONTRIBUTING.md",
+    for f in ["README.md", "README", "TODO", "citool.toml", "LICENSE",
+              "CHANGELOG.md", "CONTRIBUTING.md",
               ".gitignore", ".gitlab-ci.yml", "backup~"]:
         (d / f).touch()
     for sub in ["extra", "extra_pytests", ".github", "__pycache__"]:
@@ -483,6 +483,15 @@ def test_todo_items(copy_example):
     assert analyse_dir(d)["todo_items"] is None
     (d / "TODO").write_text("TODO\n====\n\n* One.\n\n* Two,\n  continued.\n")
     assert analyse_dir(d)["todo_items"] == 2
+
+
+def test_settings(copy_example):
+    d = copy_example("ExInstrBasic")
+    assert analyse_dir(d)["settings"] == {"ncount": None}
+    (d / "citool.toml").write_text("# Settings:\nncount = 1e4\n")
+    assert analyse_dir(d)["settings"] == {"ncount": 10000}
+    (d / "citool.toml").write_text("ncount = 0.5\n")
+    fails(d, r"citool.toml: ncount must be a whole number")
 
 
 def test_todo_bad_format(copy_example):

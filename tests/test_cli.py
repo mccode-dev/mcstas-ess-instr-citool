@@ -124,6 +124,8 @@ def test_mctest_args():
         "--strict", "--noplots", "--mpi", "3"] + base
     assert mctest_args("INSTR", "TESTS", "auto") == [
         "--strict", "--noplots", "--mpi", str(get_nprocs())] + base
+    assert mctest_args("INSTR", "TESTS", None, 10000) == [
+        "--strict", "--noplots"] + base + ["--ncount", "10000"]
 
 
 def test_lenient(copy_example, capsys, monkeypatch):
