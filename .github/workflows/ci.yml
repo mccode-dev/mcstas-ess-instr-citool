@@ -117,7 +117,7 @@ jobs:
             pytest
       - name: Set up MSVC compiler (Windows)
         if: runner.os == 'Windows'
-        uses: egor-tensin/vs-shell@54e4148eac794e4580591c2e0b7750f14b7891fc # v2.2
+        uses: egor-tensin/vs-shell@7710434f30f873ff4ab78184b74cc576a10726d6 # v2.2
       - name: Install
         run: python -m pip install --no-deps -e .
       - name: Check example projects
