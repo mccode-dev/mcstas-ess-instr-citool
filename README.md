@@ -186,9 +186,9 @@ TODO items for the EXAMPLE model
 
 The optional `citool.toml` file holds settings of the tool for the project,
 in TOML. The only setting is `ncount`, the number of neutrons of each
-`%Example` test in the full tests (`runci`), instead of the default of
+`%Test` test in the full tests (`runci`), instead of the default of
 `mctest` (1e6). It is meant for models whose tests would otherwise take too
-long, and the expected values in the `%Example` lines must then be valid
+long, and the expected values in the `%Test` lines must then be valid
 for that number of neutrons (within the 20% tolerance of `mctest`):
 
 ```toml
@@ -244,7 +244,7 @@ dependencies:
 * `example_repos/ExPyHelpers`: a small hand-written McStasScript instrument
   (source, guide and monitors), with a main instrument and one mode (`Long`)
   built from code shared in the helper modules `common.py`, `geometry.py`
-  and `monitors.py`. It also shows how to add `%Example` tests with other
+  and `monitors.py`. It also shows how to add `%Test` tests with other
   parameter values than the defaults.
 * `example_repos/ExInstrLocalFiles`: classic `.instr` file using a
   project-specific component (`localcomps/ExCountMonitor.comp`, with its own
@@ -296,7 +296,7 @@ failing with an error message on any violation. Available actions:
   (`snippets/` are thereby included, and `includes/`, `localcomps/` and
   `localdata/` files are copied into the package, with code making them
   available to the instrument). The
-  instrument is named after the file, `%Example` lines are translated into
+  instrument is named after the file, `%Test` lines are translated into
   McStasScript tests (`instr.add_test`), and dates and local paths are
   removed from the output, so it is reproducible. The generated `make()`
   writes the instrument into McStasScript's default `input_path` (the working
@@ -310,10 +310,10 @@ failing with an error message on any violation. Available actions:
 * `runci`: check that local components do not shadow McStas components, and
   that local data files do not have the names of McStas data files or
   NCrystal standard library materials, then
-  run the model checks (as `modelcheck`), `generate`, and `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
+  run the model checks (as `modelcheck`), `generate`, and `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Test`
   line, and all examples must pass. `--noplots` is also given, so `mctest`
   does not plot the output of the tests, which can take much longer than the
-  tests for instruments with many monitors. The `%Example` tests run with
+  tests for instruments with many monitors. The `%Test` tests run with
   the default number of neutrons of `mctest` (1e6), unless `ncount` is set in
   the `citool.toml` file of the project. Finally, if the project has an
   `extra_pytests/` directory, the tests in it are run with `pytest` (see
@@ -324,7 +324,7 @@ failing with an error message on any violation. Available actions:
   the tests faster, since compilation with MPI takes longer, and the default
   `mctest` simulations are short.
 * `runcifast`: a quicker version of `runci`, for fast feedback while
-  developing: the same checks, but each `%Example` test is run with only 100
+  developing: the same checks, but each `%Test` test is run with only 100
   neutrons, and only has to compile and run without crashing (its results are
   not compared with the expected values, which they will not match with fewer
   neutrons). The instruments are tested one at a time, stopping at the first

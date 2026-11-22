@@ -8,8 +8,8 @@ from pathlib import Path
 
 from .errors import CheckFailed
 
-# The same regex used by mctest to find %Example lines:
-_EXAMPLE_RE = re.compile(r"\%Example:([^\n]*)Detector\:([^\n]*)_I=([0-9.+-e]+)")
+# The same regex used by mctest to find %Test lines (older name: %Example):
+_EXAMPLE_RE = re.compile(r"\%(?:Example|Test):([^\n]*)Detector\:([^\n]*)_I=([0-9.+\-eE]+)")
 
 _INSTR_CTOR_RE = re.compile(r'ms\.(?:McStas|McXtrace)_instr\("([^"]*)"')
 
@@ -119,7 +119,7 @@ def _generate_from_instr( info, outdir ):
 
 def postprocess_pygen_output( code, name, instr_text ):
     """Post-process output from mcstas-pygen: Check the instrument name and
-    the tests corresponding to %Example lines, remove the default input_path
+    the tests corresponding to %Test lines, remove the default input_path
     and the SEARCH statements (which are replaced by add_local_files_code),
     and remove non-reproducible information like dates and local paths from
     comments."""
@@ -131,7 +131,7 @@ def postprocess_pygen_output( code, name, instr_text ):
     ntests = code.count('instr.add_test(')
     nexamples = len(_EXAMPLE_RE.findall(instr_text))
     if ntests != nexamples:
-        raise CheckFailed(f'Could not translate all %Example lines in {name}'
+        raise CheckFailed(f'Could not translate all %Test lines in {name}'
                           f' into tests ({nexamples} lines, but'
                           f' {ntests} tests)')
 

@@ -1,7 +1,7 @@
 """The settings file of a project (optional): a TOML file named citool.toml,
 at the top level of the project. The only setting is:
 
-    ncount: the number of neutrons of each %Example test in the full tests
+    ncount: the number of neutrons of each %Test test in the full tests
             (runci), instead of the default of mctest (1e6), e.g. for models
             whose tests would otherwise take too long. It is a whole number,
             written as an integer or float, e.g. "ncount = 1e4".

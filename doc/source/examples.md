@@ -16,7 +16,7 @@ The repository of the tool contains small example projects, in
 * [`ExPyHelpers`](https://github.com/mccode-dev/mcstas-ess-instr-citool/tree/main/example_repos/ExPyHelpers): a small hand-written McStasScript instrument
   (source, guide and monitors), with a main instrument and one mode (`Long`)
   built from code shared in the helper modules `common.py`, `geometry.py`
-  and `monitors.py`. It also shows how to add `%Example` tests with other
+  and `monitors.py`. It also shows how to add `%Test` tests with other
   parameter values than the defaults.
 * [`ExInstrLocalFiles`](https://github.com/mccode-dev/mcstas-ess-instr-citool/tree/main/example_repos/ExInstrLocalFiles): classic `.instr` file using a
   project-specific component (`localcomps/ExCountMonitor.comp`, with its own

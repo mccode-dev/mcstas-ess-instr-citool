@@ -179,9 +179,9 @@ TODO items for the EXAMPLE model
 
 The optional `citool.toml` file holds settings of the tool for the project,
 in TOML. The only setting is `ncount`, the number of neutrons of each
-`%Example` test in the full tests (`runci`), instead of the default of
+`%Test` test in the full tests (`runci`), instead of the default of
 `mctest` (1e6). It is meant for models whose tests would otherwise take too
-long, and the expected values in the `%Example` lines must then be valid
+long, and the expected values in the `%Test` lines must then be valid
 for that number of neutrons (within the 20% tolerance of `mctest`):
 
 ```toml
