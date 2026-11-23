@@ -48,7 +48,7 @@ REPOS = [
           standard_layout = False, public = True ),
     dict( name = "NMX", repo = "nmx",
           description = "Macromolecular diffractometer",
-          standard_layout = False, public = True ),
+          standard_layout = True, public = True ),
     dict( name = "ODIN", repo = "odin",
           description = "Multi-purpose imaging",
           standard_layout = True, public = True ),
