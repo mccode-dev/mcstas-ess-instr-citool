@@ -9,9 +9,10 @@ McStasScript python code.
 
 In short, an instrument repository contains a `conda.yml` file describing
 its conda environment, the instrument files in `instr/` (or a McStasScript
-python package in `instrpy/`), each with at least one `%Example` test, and
-anything else in `extra/`. In its CI, the tool checks the layout, and runs
-all tests with `mctest`:
+python package in `instrpy/`), each with at least one `%Test` test, and
+anything else in `extra/`. `%Test` and `%TestScan` need McStas 3.10.0 or newer;
+the older names `%Example` and `%Scan` are still accepted. In its CI, the tool
+checks the layout, and runs all tests with `mctest`:
 
 ```
 pip install git+https://github.com/mccode-dev/mcstas-ess-instr-citool.git

@@ -17,8 +17,8 @@
 * and local data files are referred to as "localdata/<file>", relative to the
 * directory in which the instrument runs (i.e. this directory).
 *
-* %Example: temperature=300 Detector: counter_I=4.69e5
-* %Example: temperature=600 Detector: counter_I=4.66e5
+* %Test: temperature=300 Detector: counter_I=4.69e5
+* %Test: temperature=600 Detector: counter_I=4.66e5
 *
 * %P
 * temperature: [K] Temperature of the sample

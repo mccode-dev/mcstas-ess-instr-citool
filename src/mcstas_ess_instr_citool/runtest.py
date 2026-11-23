@@ -23,13 +23,13 @@ def mctest_args( instrdir, testdir, mpi = None, ncount = None ):
         cmd += [ '--ncount', str(ncount) ]
     return cmd
 
-#Neutrons per %Example test in the quick modes (the results are not compared
+#Neutrons per %Test test in the quick modes (the results are not compared
 #with the expected values):
 FAST_NCOUNT = 100
 
 def runtest( info, outdir, mpi = None, mode = 'full' ):
     """Run the CI tests of the project. The mode is "full" (all checks and the
-    %Example tests, as in CI), "fast" (the %Example tests with only
+    %Test tests, as in CI), "fast" (the %Test tests with only
     FAST_NCOUNT neutrons, which must compile and run without crashing, but
     whose results are not compared with the expected ones) or "build" (the
     instruments are only compiled). The quick modes stop at the first
@@ -106,7 +106,7 @@ def runtest_quick( mctest_cmd, instrdir, testdir, mpi, mode ):
         tests = { k : v for k, v in res.items() if k != '_meta' }
         problems = []
         if not tests:
-            problems.append('no tests found (no %Example lines?)')
+            problems.append('no tests found (no %Test lines?)')
         for tname, t in sorted(tests.items()):
             if not t.get('compiled'):
                 problems.append(f'{tname}: did not compile')
@@ -156,7 +156,7 @@ def run_extra_pytests( info, outdir ):
 def check_results( res ):
     """Double-check the mctest json results, since mctest does not always
     report failures in its exit code (e.g. an instrument with a single
-    %Example which fails to compile)."""
+    %Test which fails to compile)."""
     problems = []
     tests = { k : v for k, v in res.items() if k != '_meta' }
     if not tests:

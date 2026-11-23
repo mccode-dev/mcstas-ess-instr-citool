@@ -45,7 +45,7 @@ failing with an error message on any violation. Available actions:
   (`snippets/` are thereby included, and `includes/`, `localcomps/` and
   `localdata/` files are copied into the package, with code making them
   available to the instrument). The
-  instrument is named after the file, `%Example` lines are translated into
+  instrument is named after the file, `%Test` lines are translated into
   McStasScript tests (`instr.add_test`), and dates and local paths are
   removed from the output, so it is reproducible. The generated `make()`
   writes the instrument into McStasScript's default `input_path` (the working
@@ -59,10 +59,10 @@ failing with an error message on any violation. Available actions:
 * `runci`: check that local components do not shadow McStas components, and
   that local data files do not have the names of McStas data files or
   NCrystal standard library materials, then
-  run the model checks (as `modelcheck`), `generate`, and `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Example`
+  run the model checks (as `modelcheck`), `generate`, and `mctest --strict --local` on the result. With `--strict`, each instrument must have at least one `%Test`
   line, and all examples must pass. `--noplots` is also given, so `mctest`
   does not plot the output of the tests, which can take much longer than the
-  tests for instruments with many monitors. The `%Example` tests run with
+  tests for instruments with many monitors. The `%Test` tests run with
   the default number of neutrons of `mctest` (1e6), unless `ncount` is set in
   the `citool.toml` file of the project. Finally, if the project has an
   `extra_pytests/` directory, the tests in it are run with `pytest` (see
@@ -74,7 +74,7 @@ failing with an error message on any violation. Available actions:
   `mctest` simulations are short.
 
 * `runcifast`: a quicker version of `runci`, for fast feedback while
-  developing: the same checks, but each `%Example` test is run with only 100
+  developing: the same checks, but each `%Test` test is run with only 100
   neutrons, and only has to compile and run without crashing (its results are
   not compared with the expected values, which they will not match with fewer
   neutrons). The instruments are tested one at a time, stopping at the first

@@ -62,8 +62,8 @@ def make(input_path=None):
 
 INSTR_HEADER = """\
 /* %I
-* %Example: n=3 Detector: mon_I=1.5e+11
-* %Example: Detector: mon_I=12
+* %Test: n=3 Detector: mon_I=1.5e+11
+* %Test: Detector: mon_I=12
 */
 """
 
@@ -99,7 +99,7 @@ def test_postprocess():
 def test_postprocess_missing_tests():
     with pytest.raises(RuntimeError, match=r"3 lines, but 2 tests"):
         postprocess_pygen_output(FAKE_PYGEN_OUTPUT, "X_main",
-                                 INSTR_HEADER + "%Example: Detector: mon_I=1\n")
+                                 INSTR_HEADER + "%Test: Detector: mon_I=1\n")
 
 
 def test_postprocess_bad_pygen_output():
@@ -223,7 +223,7 @@ def test_generatepy_from_instr(example, tmp_path):
         name = f"{example}_{'main' if mode == 'MAIN' else 'mode' + mode}"
         assert f'ms.McStas_instr("{name}",' in code
         orig = open(orig_info["setups"][mode]).read()
-        assert code.count("instr.add_test(") == orig.count("%Example:")
+        assert code.count("instr.add_test(") == orig.count("%Test:") + orig.count("%Example:")
     # Output is reproducible:
     outdir2 = tmp_path / "out2"
     main(["-a", "generatepy", "-o", str(outdir2), str(EXAMPLES_DIR / example)])
